@@ -19,31 +19,23 @@ def _no_limit(im, limit_args):
 
 
 def _absolute_limit(im, limit_args):
+    """
+    Sets the limits to the absolute values given.  This function is a no-op
+    and just return the input limit_args.
+    """
     return limit_args
 
 
 def _percentile_limit(im, limit_args):
-    flat = im.flatten()
-    (histo, bins) = np.histogram(flat, 100)
-    cdf = np.cumsum(histo) / sum(histo)
+    """
+    Sets limits based on percentile.
 
-    # find the value that corresponds to the min_value in limit_args[0]
-    idx = 0
-    val = cdf[idx]
-    while val < limit_args[0] / 100 and idx < len(cdf):
-        idx += 1
-        val = cdf[idx]
-    min_val = bins[idx]
-
-    # find the value that corresponds to the max_value in limit_args[1]
-    idx = len(cdf) - 1
-    val = cdf[idx]
-    while val > limit_args[1] / 100 and idx >= 0:
-        idx = idx - 1
-        val = cdf[idx]
-    max_val = bins[idx]
-
-    return (min_val, max_val)
+    Parameters
+    ----------
+    limit_args : tuple of floats in [0, 100]
+        upper and lower percetile values
+    """
+    return np.percentile(im, limit_args)
 
 
 class xsection_viewer(object):
