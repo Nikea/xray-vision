@@ -13,6 +13,7 @@ from matplotlib.figure import Figure
 from matplotlib.cm import datad
 import matplotlib.colors
 import numpy as np
+from collections import OrderedDict
 
 
 class CrossSectionCanvas(FigureCanvas):
@@ -112,16 +113,16 @@ class StackScannerWidget(QtGui.QWidget):
         # get the shape of the stack so that the stack direction can be varied
         self._dims = stack.shape
         # create the viewer widget
-        self.xsection_widget = CrossSectionCanvas(stack[0])
+        self._canvas = CrossSectionCanvas(stack[0])
 
         # connect up the signals/slots to boss the viewer around
-        self.sig_update_cmap.connect(self.xsection_widget.sl_update_color_map)
-        self.sig_update_image.connect(self.xsection_widget.sl_update_image)
-        self.sig_update_norm.connect(self.xsection_widget.sl_update_norm)
+        self.sig_update_cmap.connect(self._canvas.sl_update_color_map)
+        self.sig_update_image.connect(self._canvas.sl_update_image)
+        self.sig_update_norm.connect(self._canvas.sl_update_norm)
         self.sig_update_limit_function.connect(
-            self.xsection_widget.sl_update_limit_func)
+            self._canvas.sl_update_limit_func)
         self.sig_update_color_limits.connect(
-            self.xsection_widget.sl_update_color_limits)
+            self._canvas.sl_update_color_limits)
 
         # ---- set up widget box 1---------------------------------------------
         # --------- it has: ---------------------------------------------------
@@ -195,7 +196,7 @@ class StackScannerWidget(QtGui.QWidget):
 
         self._cm_cb.setEditText('gray')
         self._cm_cb.editTextChanged[str].connect(
-            self.xsection_widget.sl_update_color_map)
+            self._canvas.sl_update_color_map)
 
         # set up intensity manipulation combo box
         intensity_behavior_data = [(images._full_range,
@@ -285,11 +286,11 @@ class StackScannerWidget(QtGui.QWidget):
         ctl_layout.addLayout(widget_box1)
         ctl_layout.addStretch()
 
-        self.mpl_toolbar = NavigationToolbar(self.xsection_widget, self)
+        self.mpl_toolbar = NavigationToolbar(self._canvas, self)
         # add toolbar
         v_box_layout.addWidget(self.mpl_toolbar)
         # add main widget
-        v_box_layout.addWidget(self.xsection_widget)
+        v_box_layout.addWidget(self._canvas)
         # add slider v_box_layout
 
 
@@ -470,7 +471,8 @@ class StackScannerWidget(QtGui.QWidget):
     def set_limits(self, bottom, top):
         self.sig_update_color_limits.emit((bottom, top))
 
-    def set_img_stack(self, img_stack):
+    @QtCore.Slot(list, list)
+    def set_img_stack(self, lbls, imgs):
         """
         Give the widget a new image stack without remaking the widget.
         Only call this after the widget has been constructed.  In
@@ -480,10 +482,26 @@ class StackScannerWidget(QtGui.QWidget):
         ----------
         img_stack: anything that returns a 2D array when __getitem__ is called
         """
-        if img_stack is not None:
-            self.stack = img_stack
-            self.update_frame(0)
+        self._data = OrderedDict()
+        for (lbl, img) in zip(lbls, imgs):
+            self._data[lbl] = img
 
-    @QtCore.Slot(int)
-    def update_frame(self, frame_idx):
-        self.sig_update_image.emit(self._stack[frame_idx])
+        self.update_frame(lbls[0])
+
+    @QtCore.Slot(str)
+    def update_frame(self, frame_lbl):
+        self.sig_update_image.emit(self._data[frame_lbl])
+
+
+class StackScannerMainWindow(QtGui.QMainWindow):
+    def __init__(self, data_obj, parent=None):
+        QtGui.QMainWindow.__init__(self, parent)
+        self.setWindowTitle('StackExplorer')
+
+        self._widget = StackScannerWidget(data_obj)
+
+        self._widget.setFocus()
+        self.setCentralWidget(self._widget)
+        self._ctrl_widget = self._widget.ctrl_box_2
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea,
+                           self._ctrl_widget)

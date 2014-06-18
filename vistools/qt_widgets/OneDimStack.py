@@ -63,7 +63,7 @@ class OneDimStackViewer(common.AbstractDataView1D):
         self._fig = fig
         # create the matplotlib axes
         self._ax1 = self._fig.add_subplot(1, 1, 1)
-        self._ax1.set_aspect('equal')
+        self._ax1.set_aspect('auto')
 
         # call up the inheritance chain
         common.AbstractDataView1D.__init__(self, cmap=cmap, norm=norm)
@@ -74,10 +74,14 @@ class OneDimStackViewer(common.AbstractDataView1D):
             # get the (x,y) data from the dictionary
             (x, y) = self._data[key]
             # plot the (x,y) data with default offsets
-            self._ax1.plot(x + idx * self._horz_offset,
-                           y + idx * self._vert_offset)
+            #===================================================================
+            # self._ax1.plot(x + idx * self._horz_offset,
+            #                y + idx * self._vert_offset)
+            #===================================================================
+            self._ax1.plot(x, y)
             # increment the counter
             idx += 1
+
 
     def set_vert_offset(self, vert_offset):
         """
