@@ -99,6 +99,7 @@ class StackScannerWidget(QtGui.QWidget):
     sig_update_norm = QtCore.Signal(matplotlib.colors.Normalize)
     sig_update_limit_function = QtCore.Signal(object, tuple)
     sig_update_color_limits = QtCore.Signal(tuple)
+    sig_data_changed = QtCore.Signal(np.ndarray, str)
 
     def __init__(self, stack, page_size=10, parent=None):
         QtGui.QWidget.__init__(self, parent)
@@ -149,7 +150,7 @@ class StackScannerWidget(QtGui.QWidget):
         self._slider.setTracking(True)
         self._slider.setSingleStep(1)
         self._slider.setPageStep(page_size)
-        self._slider.valueChanged.connect(self.update_frame)
+        self._slider.valueChanged.connect(self.update_frame_byidx)
         self._slider.setOrientation(QtCore.Qt.Horizontal)
 
         # and its spin box
@@ -486,11 +487,26 @@ class StackScannerWidget(QtGui.QWidget):
         for (lbl, img) in zip(lbls, imgs):
             self._data[lbl] = img
 
-        self.update_frame(lbls[0])
+        for key in self._data.keys():
+            print("key: {0}, value class: {1}".
+                  format(key, self._data[key].__class__))
+
+        self.update_frame_byname(lbls[0])
+
+    @QtCore.Slot(int)
+    def update_frame_byidx(self, idx):
+        frame_lbl = self._data.keys()[idx]
+        self.update_frame_byname(frame_lbl)
 
     @QtCore.Slot(str)
-    def update_frame(self, frame_lbl):
-        self.sig_update_image.emit(self._data[frame_lbl])
+    def update_frame_byname(self, frame_lbl):
+        img = self._data[frame_lbl]
+        self.sig_update_image.emit(img)
+        self.sig_data_changed.emit(img, frame_lbl)
+
+    @QtCore.Slot(np.ndarray, str)
+    def sl_data_changed(self, img, name):
+        self.sig_data_changed.emit(img, name)
 
 
 class StackScannerMainWindow(QtGui.QMainWindow):

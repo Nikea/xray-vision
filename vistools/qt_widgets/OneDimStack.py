@@ -124,17 +124,19 @@ class OneDimStackViewer(common.AbstractDataView1D):
         for key in keys:
             # get the (x,y) data from the dictionary
             (x, y) = self._data[key]
+            print("len of (x,y): ({0}, {1})".format(len(x), len(y)))
             # check to see if there is already a line in the axes
             if counter < num_lines:
-                self._ax1.lines[counter].set_xdata(
-                    x + counter * self._horz_offset)
-                self._ax1.lines[counter].set_ydata(
+                self._ax1.lines[counter].set_data(
+                    x + counter * self._horz_offset,
                     y + counter * self._vert_offset)
+                self._ax1.lines[counter].set_label(key)
             else:
                 # a new line needs to be added
                 # plot the (x,y) data with default offsets
                 self._ax1.plot(x + counter * self._horz_offset,
-                               y + counter * self._vert_offset)
+                               y + counter * self._vert_offset,
+                               label=key)
             # compute the color for the line
             color = rgba.to_rgba(x=(counter / num_datasets))
             # set the color for the line
@@ -147,6 +149,8 @@ class OneDimStackViewer(common.AbstractDataView1D):
             (min_x, max_x, min_y, max_y) = self.find_range()
             self._ax1.set_xlim(min_x, max_x)
             self._ax1.set_ylim(min_y, max_y)
+
+        self._ax1.legend((keys))
 
     def set_auto_scale(self, is_autoscaling):
         """

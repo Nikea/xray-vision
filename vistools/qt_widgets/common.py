@@ -15,6 +15,20 @@ _CMAPS = datad.keys()
 _CMAPS.sort()
 
 
+class AbstractAnalysisStep(QtGui.QWidget):
+    # signals
+    sig_pipeline_complete = QtCore.Signal(np.ndarray, str)
+
+    def __init__(self, name, func, parent=None):
+        QtGui.QWidget
+
+    @QtCore.Slot(str, np.ndarray)
+    def sl_pipeline_start(self, data_label, data):
+        # do nothing in the abstract base class
+        raise Exception(
+            "This method must be over-ridden in a concrete implementation")
+
+
 class PlotWidget(QtGui.QMainWindow):
     """
     Top level container for one control widget and one data view widget
