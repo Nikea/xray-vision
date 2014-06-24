@@ -67,6 +67,8 @@ class OneDimStackViewer(common.AbstractDataView1D):
 
         # call up the inheritance chain
         common.AbstractDataView1D.__init__(self, cmap=cmap, norm=norm)
+        # keep track of the mpl lines on the canvas
+        self._data_lines = {}
         # create a local counter
         idx = 0
         # add the data to the main axes
@@ -74,14 +76,9 @@ class OneDimStackViewer(common.AbstractDataView1D):
             # get the (x,y) data from the dictionary
             (x, y) = self._data[key]
             # plot the (x,y) data with default offsets
-            #===================================================================
-            # self._ax1.plot(x + idx * self._horz_offset,
-            #                y + idx * self._vert_offset)
-            #===================================================================
-            self._ax1.plot(x, y)
+            self._data_lines[key] = self._ax1.plot(x, y, label=key)[0]
             # increment the counter
             idx += 1
-
 
     def set_vert_offset(self, vert_offset):
         """
@@ -113,30 +110,26 @@ class OneDimStackViewer(common.AbstractDataView1D):
         offset or autoscaling) or adding new data
         """
         rgba = cm.ScalarMappable(self._norm, self._cmap)
-        keys = self._data.keys()
-        # number of lines currently on the plot
-        num_lines = len(self._ax1.lines)
+        data_keys = self._data.keys()
         # number of datasets in the data dict
-        num_datasets = len(keys)
+        num_datasets = len(data_keys)
         # set the local counter
         counter = 0
         # loop over the datasets
-        for key in keys:
+        for data_key in data_keys:
             # get the (x,y) data from the dictionary
-            (x, y) = self._data[key]
-            print("len of (x,y): ({0}, {1})".format(len(x), len(y)))
-            # check to see if there is already a line in the axes
-            if counter < num_lines:
-                self._ax1.lines[counter].set_data(
-                    x + counter * self._horz_offset,
-                    y + counter * self._vert_offset)
-                self._ax1.lines[counter].set_label(key)
+            (x, y) = self._data[data_key]
+            # check to see if the line is already in the line dictionary
+            if not data_key in self._data_lines:
+                self._data_lines[data_key] = self._ax1.plot(
+                                            x + counter * self._horz_offset,
+                                            y + counter * self._vert_offset,
+                                            label=data_key)[0]
             else:
-                # a new line needs to be added
-                # plot the (x,y) data with default offsets
-                self._ax1.plot(x + counter * self._horz_offset,
-                               y + counter * self._vert_offset,
-                               label=key)
+                self._data_lines[data_key].set_data(
+                    x + counter * self._horz_offset,
+                    y + counter * self._vert_offset,
+                    label=data_key)
             # compute the color for the line
             color = rgba.to_rgba(x=(counter / num_datasets))
             # set the color for the line
@@ -150,7 +143,7 @@ class OneDimStackViewer(common.AbstractDataView1D):
             self._ax1.set_xlim(min_x, max_x)
             self._ax1.set_ylim(min_y, max_y)
 
-        self._ax1.legend((keys))
+        self._ax1.legend((data_keys))
 
     def set_auto_scale(self, is_autoscaling):
         """
