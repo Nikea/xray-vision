@@ -61,5 +61,7 @@ setup(
     name='vistools',
     version=FULLVERSION,
     author='Brookhaven National Lab',
-    packages=['vistools', 'vistools.qt_widgets'],
+    packages=['vistools', 'vistools.qt_widgets',
+              'vistools.backend', 'vistools.images',
+              'vistools.messenger', 'vistools.qt_widgets'],
 )

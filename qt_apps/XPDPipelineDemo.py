@@ -14,8 +14,8 @@ from vistools.qt_widgets.stack_scanner import StackScannerMainWindow
 import numpy as np
 from collections import OrderedDict
 from vistools.qt_widgets.OneDimStack import OneDimStackMainWindow
-from nsls2.binary import read_binary
 from nsls2 import core
+from nsls2.io.binary import read_binary
 
 
 class data_gen_2d(object):

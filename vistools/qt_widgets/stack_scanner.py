@@ -2,7 +2,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import six
 
-from vistools import images
+from ..images import images
 
 # grab the version from mpl which has done the work of smoothing over
 # the differences

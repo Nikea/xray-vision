@@ -128,8 +128,8 @@ class OneDimStackViewer(common.AbstractDataView1D):
             else:
                 self._data_lines[data_key].set_data(
                     x + counter * self._horz_offset,
-                    y + counter * self._vert_offset,
-                    label=data_key)
+                    y + counter * self._vert_offset)
+                self._data_lines[data_key].set_label(data_key)
             # compute the color for the line
             color = rgba.to_rgba(x=(counter / num_datasets))
             # set the color for the line
