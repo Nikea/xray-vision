@@ -138,17 +138,11 @@ class DataMuggler(QtCore.QObject):
         be a tuple of the form (name, nafill_mode, is_scalar)
 
     """
-    # signal to be emitted when data is added or removed from
-    # the muggler
-    length_changed = QtCore.Signal(int)
 
     # this is a signal emitted when the muggler has new data that
-    # clients can grab
-    new_data = QtCore.Signal()
-
-    # the column labeled as 'primary' has been updated, emit it's densifixed
-    # row
-    primary_update = QtCore.Signal()
+    # clients can grab.  The list return is the names of the columns
+    # that have new data
+    new_data = QtCore.Signal(list)
 
     # make the muggler slicable so we can directly pass it to
     # 2D viewers
@@ -179,6 +173,20 @@ class DataMuggler(QtCore.QObject):
         self._dataframe = pd.DataFrame({n: [] for n in names}, index=[])
 
     def append_data(self, time_stamp, data_dict):
+        """
+        Add data to the DataMuggler.
+
+        Parameters
+        ----------
+        time_stamp : datetime or list of datetime
+            The times of the data
+
+        data_dict : dict
+            The keys must be a sub-set of the columns that the DataMuggler
+            knows about.  If `time_stamp` is a list, then the values must be
+            lists of the same length, if `time_stamp` is a single datatime
+            object then the values must be single values
+        """
         if not all(k in self._dataframe for k in data_dict):
             # TODO dillify this error checking
             raise ValueError("trying to pass in invalid key")
@@ -204,6 +212,8 @@ class DataMuggler(QtCore.QObject):
         self._dataframe = self._dataframe.append(
             pd.DataFrame(data_dict, index=time_stamp))
         self._dataframe.sort(inplace=True)
+        # emit that we have new data!
+        self.new_data.emit(list(data_dict))
 
     def __len__(self):
         pass
@@ -222,19 +232,94 @@ class DataMuggler(QtCore.QObject):
             A list of the other columns to return
 
         time_range : tuple or None
-            Times to limit returned data to
+            Times to limit returned data to.  This is not implemented.
+
+        Returns
+        -------
+        index : list
+            Nominally the times of each of data points
+
+        out_data : dict
+            A dictionary of the
         """
         if time_range is not None:
             raise NotImplementedError("you can only get all data right now")
 
+        # grab the times/index where the primary key has a value
         index = self._dataframe[reference_column].dropna().index
+        # make output dictionary
         out_data = dict()
+        # for the keys we care about
         for k in [reference_column, ] + other_columns:
-            work_series = self._dataframe[k].fillna(
-                method=self._fill_methods[k])[index]
+            # pull out the DataSeries
+            work_series = self._dataframe[k]
+            # fill in the NaNs using what ever method needed
+            work_series = work_series.fillna(method=self._fill_methods[k])
+            # select it only at the times we care about
+            work_series = work_series[index]
+            # if it is not a scalar, do the look up
             if k in self._is_not_scalar:
                 out_data[k] = [self._nonscalar_lookup[k][t]
                                for t in work_series]
+            # else, just turn the series into a list so we have uniform
+            # return types
             else:
                 out_data[k] = list(work_series.values)
-        return index, out_data
+
+        # return the index an the dictionary
+        return list(index), out_data
+
+    def get_last_value(self, reference_column, other_columns):
+        """
+        Return a dictionary of the dessified row an the most recent
+        time where reference column has a valid value
+
+        Parameters
+        ----------
+        reference_column : str
+            The 'master' column to get time stamps from
+
+        other_columns : list of str
+            A list of the other columns to return
+
+        time_range : tuple or None
+            Times to limit returned data to.  This is not implemented.
+
+        Returns
+        -------
+        index : Timestamp
+            The time associated with the data
+
+        out_data : dict
+            A dictionary of the
+        """
+        # grab the times/index where the primary key has a value
+        index = self._dataframe[reference_column].dropna().index
+        # make output dictionary
+        out_data = dict()
+        # for the keys we care about
+        for k in [reference_column, ] + other_columns:
+            # pull out the DataSeries
+            work_series = self._dataframe[k]
+            # fill in the NaNs using what ever method needed
+            work_series = work_series.fillna(method=self._fill_methods[k])
+            # select it only at the times we care about
+            work_series = work_series[index]
+            # if it is not a scalar, do the look up
+            if k in self._is_not_scalar:
+                out_data[k] = self._nonscalar_lookup[k][work_series.value[-1]]
+
+            # else, just turn the series into a list so we have uniform
+            # return types
+            else:
+                out_data[k] = list(work_series.values[-1])
+
+        # return the index an the dictionary
+        return list(index), out_data
+
+
+class MuggleWatcherLatest(QtCore.QObject):
+    """
+    This is a class that watches DataMuggler's for the `new_data` signal
+    """
+    pass
