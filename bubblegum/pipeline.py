@@ -37,6 +37,8 @@ from __future__ import (absolute_import, division, print_function,
 import six
 from . import QtCore
 
+import pandas as pd
+
 
 class PipelineComponent(QtCore.QObject):
     """
@@ -85,3 +87,154 @@ class PipelineComponent(QtCore.QObject):
         else:
             if ret is not None:
                 self.source_signal.emit(*ret)
+
+
+class __muggler_helper(object):
+    """
+    This is a helper class for providing slicable objects
+    out of the muggler.  This is mostly an api translation layer
+    with very little brains, it delegates all useful work back
+    up to it's parent DataMuggler.
+
+    It might be worth (down the road) refactoring some of the PIMS
+    base classes to provide slicing power
+    """
+    def __init__(self, muggler, column):
+        self._muggler = muggler
+        self._col = column
+
+    def __getitem__(self, k):
+        """
+        Make this object slicable
+        """
+        return self._muggler.get_value(self._col, k)
+
+    def __len__(self):
+        return len(self._muggler)
+
+
+class DataMuggler(QtCore.QObject):
+    """
+    This class provides a wrapper layer of signals and slots
+    around a pandas DataFrame to make plugging stuff in for live
+    view easier.
+
+    The data collection/event model being used is all measurements
+    (that is values that come off of the hardware) are time stamped
+    to ring time.  The assumption that there will be one measurement
+    (ex an area detector) which can not be interpolated and will serve
+    as the source of reference time stamps.
+
+    The language being used through out is that of pandas data frames.
+    The data model is that of a sparse table keyed on time stamps which
+    is 'densified' on demand by propagating the last measured value forward.
+
+
+
+    Parameters
+    ----------
+    col_spec : list
+        List of information about the columns. Each entry should
+        be a tuple of the form (name, nafill_mode, is_scalar)
+
+    """
+    # signal to be emitted when data is added or removed from
+    # the muggler
+    length_changed = QtCore.Signal(int)
+
+    # this is a signal emitted when the muggler has new data that
+    # clients can grab
+    new_data = QtCore.Signal()
+
+    # the column labeled as 'primary' has been updated, emit it's densifixed
+    # row
+    primary_update = QtCore.Signal()
+
+    # make the muggler slicable so we can directly pass it to
+    # 2D viewers
+    def __init__(self, col_spec):
+        valid_na_fill = {'pad', 'ffill', 'bfill', 'back pad'}
+
+        self._fill_methods = dict()
+        self._nonscalar_lookup = dict()
+        self._is_not_scalar = set()
+        names = []
+        for c_name, fill_method, is_scalar in col_spec:
+            # validate fill methods
+            if fill_method not in valid_na_fill:
+                raise ValueError(("{} is not a valid fill method "
+                                 "must be one of {}").format(fill_method,
+                                                             valid_na_fill))
+            # used to sort out which way filling should be done.
+            # forward for motor-like, backwards from image-like
+            self._fill_methods[c_name] = fill_method
+            # determine if the value should be stored directly in the data
+            # frame or in a separate data structure
+            if not is_scalar:
+                self._is_not_scalar.add(c_name)
+                self._nonscalar_lookup[c_name] = dict()
+            names.append(c_name)
+
+        # make an empty data frame
+        self._dataframe = pd.DataFrame({n: [] for n in names}, index=[])
+
+    def append_data(self, time_stamp, data_dict):
+        if not all(k in self._dataframe for k in data_dict):
+            # TODO dillify this error checking
+            raise ValueError("trying to pass in invalid key")
+        try:
+            iter(time_stamp)
+        except TypeError:
+            # if time_stamp is not iterable, assume is a datime object
+            # and we only have one data point to deal with so up-convert
+            time_stamp = [time_stamp, ]
+            data_dict = {k: [v, ] for k, v in six.iteritems(data_dict)}
+
+        # deal with none-scalar look up magic
+        for k in data_dict:
+            # if none-scalar shove tha data into the storage
+            # and replace the data with the time stamp
+            if k in self._is_not_scalar:
+                for t, v in zip(time_stamp, data_dict[k]):
+                    self._nonscalar_lookup[k][t] = v
+                data_dict[k] = time_stamp
+
+        # make a new data frame with the input data and append it to the
+        # existing data
+        self._dataframe = self._dataframe.append(
+            pd.DataFrame(data_dict, index=time_stamp))
+        self._dataframe.sort(inplace=True)
+
+    def __len__(self):
+        pass
+
+    def get_values(self, reference_column, other_columns, time_range=None):
+        """
+        Return a dictionary of data resampled (filled) to the times which have
+        non-NaN values in the reference column
+
+        Parameters
+        ----------
+        reference_column : str
+            The 'master' column to get time stamps from
+
+        other_columns : list of str
+            A list of the other columns to return
+
+        time_range : tuple or None
+            Times to limit returned data to
+        """
+        if time_range is not None:
+            raise NotImplementedError("you can only get all data right now")
+
+        index = self._dataframe[reference_column].dropna().index
+        out_data = dict()
+        for k in [reference_column, ] + other_columns:
+            work_series = self._dataframe[k].fillna(
+                method=self._fill_methods[k])[index]
+            if k in self._is_not_scalar:
+                out_data[k] = [self._nonscalar_lookup[k][t]
+                               for t in work_series]
+            else:
+                out_data[k] = list(work_series.values)
+        return index, out_data
