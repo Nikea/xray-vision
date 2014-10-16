@@ -35,7 +35,8 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import six
-from . import QtCore
+#from . import QtCore
+from matplotlib.backends.qt_compat import QtCore
 
 import pandas as pd
 
@@ -45,25 +46,42 @@ class PipelineComponent(QtCore.QObject):
     The top-level object to represent a component in the quick-and-dirty
     live-data pipe line.
 
-    This class provides the basic machinery for the signal and slot required for
-    the hooking up the pipeline.
+    This class provides the basic machinery for the signal and
+    slot required for the hooking up the pipeline.
 
-    This is meant to be sub-classed and sub classes must implement _process_msg
-    which must have the signature::
+    The processing function needs to be provided at instatiation:
 
-        def _process_msg(self, message, data_object):
+        def process_msg(message, data_object):
+            # do stuff with message/data
             return result_message, result_data
 
-    This function can also return `None`
+    This function can also return `None` to indicate that there is no
+    output for further processing.
 
-    The scheme for managing the messages will be pinned down at a later date.
+    The scheme for managing/schema of the content of the messages will be
+    pinned down at a later date.
 
     Currently this scheme does no checking to ensure types are correct or
     valid pre-running
-    """
-    source_signal = QtCore.Signal(str, object)
 
-    @QtCore.Slot(str, object)
+    Parameters
+    ----------
+    process_function : callable
+        Must have the following signature:
+
+        def process_msg(message, data_object):
+            # do stuff with message/data
+            return result_message, result_data
+            # return None
+
+    """
+    source_signal = QtCore.Signal(object, object)
+
+    def __init__(self, process_function, **kwargs):
+        super(PipelineComponent, self).__init__(**kwargs)
+        self._process_msg = process_function
+
+    @QtCore.Slot(object, object)
     def sink_slot(self, message, data_payload):
         """
         This function is the entry point for pushing data through
@@ -83,6 +101,7 @@ class PipelineComponent(QtCore.QObject):
             ret = self._process_msg(message, data_payload)
         except Exception as E:
             # yes, catch them all!!
+            print("something failed")
             print(E)
         else:
             if ret is not None:
@@ -146,8 +165,9 @@ class DataMuggler(QtCore.QObject):
 
     # make the muggler slicable so we can directly pass it to
     # 2D viewers
-    def __init__(self, col_spec):
-        valid_na_fill = {'pad', 'ffill', 'bfill', 'back pad'}
+    def __init__(self, col_spec, **kwargs):
+        super(DataMuggler, self).__init__(**kwargs)
+        valid_na_fill = {'pad', 'ffill', 'bfill', 'backpad'}
 
         self._fill_methods = dict()
         self._nonscalar_lookup = dict()
@@ -201,11 +221,14 @@ class DataMuggler(QtCore.QObject):
         # deal with none-scalar look up magic
         for k in data_dict:
             # if none-scalar shove tha data into the storage
-            # and replace the data with the time stamp
+            # and replace the data with the id of the value object
+            # this should probably be a hash, but this is quick and dirty
             if k in self._is_not_scalar:
-                for t, v in zip(time_stamp, data_dict[k]):
-                    self._nonscalar_lookup[k][t] = v
-                data_dict[k] = time_stamp
+                ids = []
+                for v in data_dict[k]:
+                    ids.append(id(v))
+                    self._nonscalar_lookup[k][id(v)] = v
+                data_dict[k] = ids
 
         # make a new data frame with the input data and append it to the
         # existing data
@@ -214,9 +237,6 @@ class DataMuggler(QtCore.QObject):
         self._dataframe.sort(inplace=True)
         # emit that we have new data!
         self.new_data.emit(list(data_dict))
-
-    def __len__(self):
-        pass
 
     def get_values(self, reference_column, other_columns, time_range=None):
         """
@@ -307,19 +327,109 @@ class DataMuggler(QtCore.QObject):
             work_series = work_series[index]
             # if it is not a scalar, do the look up
             if k in self._is_not_scalar:
-                out_data[k] = self._nonscalar_lookup[k][work_series.value[-1]]
+                out_data[k] = self._nonscalar_lookup[k][work_series.values[-1]]
 
             # else, just turn the series into a list so we have uniform
             # return types
             else:
-                out_data[k] = list(work_series.values[-1])
+                out_data[k] = work_series.values[-1]
 
         # return the index an the dictionary
-        return list(index), out_data
+        return index[-1], out_data
 
 
 class MuggleWatcherLatest(QtCore.QObject):
     """
-    This is a class that watches DataMuggler's for the `new_data` signal
+    This is a class that watches DataMuggler's for the `new_data` signal, grabs
+    the lastest
     """
-    pass
+    sig = QtCore.Signal(object, dict)
+
+    def __init__(self, muggler, watch_column, extract_colums, **kwargs):
+        super(MuggleWatcherLatest, self).__init__(**kwargs)
+        self._muggler = muggler
+        self._ref_col = watch_column
+        self._other_cols = extract_colums
+        self._muggler.new_data.connect(self.process_message)
+
+    @QtCore.Slot(list)
+    def process_message(self, updated_cols):
+        """
+        Process the updates from the muggler to see if there
+        is anything we need to deal with.
+
+        Parameters
+        ----------
+        updated_cols : list
+            Updated columns
+
+        """
+        if self._ref_col in updated_cols:
+            ind, res_dict = self._muggler.get_last_value(self._ref_col,
+                                                         self._other_cols)
+            self.sig.emit(ind, res_dict)
+
+
+class MuggleWatcherTwoLists(QtCore.QObject):
+    """
+    This class watches a DataMunggler and when it gets new data extracts
+    all of the time series data, for two columns and emits both as lists
+    """
+    sig = QtCore.Signal(list, list)
+
+    def __init__(self, muggler, watch_col, col1, col2, **kwargs):
+        super(MuggleWatcherTwoLists, self).__init__(**kwargs)
+        self._muggler = muggler
+        self._ref_col = watch_col
+        self._other_cols = [col1, col2]
+        self._muggler.new_data.connect(self.process_message)
+
+    @QtCore.Slot(list)
+    def process_message(self, updated_cols):
+        """
+        Process the updates from the muggler to see if there
+        is anything we need to deal with.
+
+        Parameters
+        ----------
+        updated_cols : list
+            Updated columns
+
+        """
+        if self._ref_col in updated_cols:
+            ind, res_dict = self._muggler.get_values(self._ref_col,
+                                                         self._other_cols)
+            self.sig.emit(res_dict[self._other_cols[0]],
+                          res_dict[self._other_cols[1]])
+
+
+class MuggleWatcherAll(QtCore.QObject):
+    """
+    This class watches a DataMunggler and when it gets new data extracts
+    all of the time series data, not just the latest.
+    """
+    sig = QtCore.Signal(list, dict)
+
+    def __init__(self, muggler, watch_column, extract_colums, **kwargs):
+        super(MuggleWatcherAll, self).__init__(**kwargs)
+        self._muggler = muggler
+        self._ref_col = watch_column
+        self._other_cols = extract_colums
+        self._muggler.new_data.connect(self.process_message)
+
+    @QtCore.Slot(list)
+    def process_message(self, updated_cols):
+        """
+        Process the updates from the muggler to see if there
+        is anything we need to deal with.
+
+        Parameters
+        ----------
+        updated_cols : list
+            Updated columns
+
+        """
+        if self._ref_col in updated_cols:
+            ind, res_dict = self._muggler.get_values(self._ref_col,
+                                                         self._other_cols)
+            self.sig.emit(ind, res_dict)
