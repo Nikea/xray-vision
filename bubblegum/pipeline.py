@@ -46,6 +46,12 @@ class PipelineComponent(QtCore.QObject):
     The top-level object to represent a component in the quick-and-dirty
     live-data pipe line.
 
+    WARNING these docs do not match what is written, but are what _should_
+    be written.  currently the message is serving as the index which should
+    probably be packed in with the data or as it own arguement.  In either
+    case need to talk to the controls group before spending the effort to
+    re-factor.
+
     This class provides the basic machinery for the signal and
     slot required for the hooking up the pipeline.
 
@@ -89,47 +95,23 @@ class PipelineComponent(QtCore.QObject):
 
         Parameters
         ----------
-        message : str
-            Some sort of string describing what the incoming data is
+        timestamp : datetime or sequence of datetime
+            The timestamp that aligns with the data in the data payload
 
         data_payload : object
-            The data to be processed.
+            dict of lists or something that looks like it.
 
 
         """
         try:
             ret = self._process_msg(message, data_payload)
         except Exception as E:
-            # yes, catch them all!!
+            # yes, gotta catch 'em all!!
             print("something failed")
             print(E)
         else:
             if ret is not None:
                 self.source_signal.emit(*ret)
-
-
-class __muggler_helper(object):
-    """
-    This is a helper class for providing slicable objects
-    out of the muggler.  This is mostly an api translation layer
-    with very little brains, it delegates all useful work back
-    up to it's parent DataMuggler.
-
-    It might be worth (down the road) refactoring some of the PIMS
-    base classes to provide slicing power
-    """
-    def __init__(self, muggler, column):
-        self._muggler = muggler
-        self._col = column
-
-    def __getitem__(self, k):
-        """
-        Make this object slicable
-        """
-        return self._muggler.get_value(self._col, k)
-
-    def __len__(self):
-        return len(self._muggler)
 
 
 class DataMuggler(QtCore.QObject):
@@ -213,14 +195,14 @@ class DataMuggler(QtCore.QObject):
         try:
             iter(time_stamp)
         except TypeError:
-            # if time_stamp is not iterable, assume is a datime object
+            # if time_stamp is not iterable, assume is a datetime object
             # and we only have one data point to deal with so up-convert
             time_stamp = [time_stamp, ]
             data_dict = {k: [v, ] for k, v in six.iteritems(data_dict)}
 
-        # deal with none-scalar look up magic
+        # deal with non-scalar look up magic
         for k in data_dict:
-            # if none-scalar shove tha data into the storage
+            # if non-scalar shove tha data into the storage
             # and replace the data with the id of the value object
             # this should probably be a hash, but this is quick and dirty
             if k in self._is_not_scalar:
@@ -341,8 +323,23 @@ class DataMuggler(QtCore.QObject):
 class MuggleWatcherLatest(QtCore.QObject):
     """
     This is a class that watches DataMuggler's for the `new_data` signal, grabs
-    the lastest
+    the lastest row (filling in data from other rows as needed) at the columns
+    selected.  You probably should not extract columns which fill back as they
+    will come out as NaN in this (I think).
+
+    Parameters
+    ----------
+    muggler : DataMuggler
+        The mugger to keep tabs on
+
+    watch_column : str
+        The name of the comlumn to watch for additions to
+
+    extract_columns : list of str
+        Additional columns to extract in addition to the watched column
+
     """
+    # signal to emit index + data
     sig = QtCore.Signal(object, dict)
 
     def __init__(self, muggler, watch_column, extract_colums, **kwargs):
@@ -372,7 +369,7 @@ class MuggleWatcherLatest(QtCore.QObject):
 
 class MuggleWatcherTwoLists(QtCore.QObject):
     """
-    This class watches a DataMunggler and when it gets new data extracts
+    This class watches a DataMuggler and when it gets new data extracts
     all of the time series data, for two columns and emits both as lists
     """
     sig = QtCore.Signal(list, list)
@@ -405,7 +402,7 @@ class MuggleWatcherTwoLists(QtCore.QObject):
 
 class MuggleWatcherAll(QtCore.QObject):
     """
-    This class watches a DataMunggler and when it gets new data extracts
+    This class watches a DataMuggler and when it gets new data extracts
     all of the time series data, not just the latest.
     """
     sig = QtCore.Signal(list, dict)
