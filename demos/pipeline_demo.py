@@ -85,6 +85,17 @@ def plotter(title, xlabel, ylabel, ax=None, N=None, ln_sty=None, fit=False):
     ln, = ax.plot([], [], ln_sty)
     if fit:
         ln2, = ax.plot([], [], 'g-')
+        m = GaussModel() + lmfit.models.ConstantModel()
+        param = m.make_params()
+        for k in param:
+            param[k].value = 1
+
+        param['area'].min = 1
+        param['area'].max = 150
+        param['sigma'].min = 1
+        param['sigma'].max = 150
+        param['center'].min = 0
+        param['center'].max = 150
     time_tracker = {'old': time.time()}
 
     def inner(y, x):
@@ -105,8 +116,9 @@ def plotter(title, xlabel, ylabel, ax=None, N=None, ln_sty=None, fit=False):
 
         ln.set_data(x, y)
         if fit and len(x) > 4:
-            m = GaussModel() + lmfit.models.ConstantModel()
-            res = m.fit(y, x=x, sigma=1, area=1, center=70, c=0)
+            res = m.fit(y, x=x, params=param)
+            # try to be clever and iterative
+            param.update(res.params)
             ft_y = res.eval()
             ln2.set_data(x, ft_y)
 
@@ -261,17 +273,17 @@ class FrameSourcerBrownian(QtCore.QObject):
 
 # used below
 img_size = (150, 150)
-period = 300
+period = 150
 I_func_sin = lambda count: (1 + .5*np.sin(2 * count * np.pi / period))
-center = 75
-sigma = 50
+center = 30
+sigma = 100
 I_func_gaus = lambda count: (1 + np.exp(-(count - center) ** 2 / sigma))
 
 
 def scale_fluc(scale, count):
-    if not count % 100:
-        return scale - .5
     if not count % 50:
+        return scale - .5
+    if not count % 25:
         return scale + .5
     return None
 
