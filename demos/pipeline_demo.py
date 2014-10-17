@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from datetime import datetime
 from bubblegum.pipeline import (DataMuggler, PipelineComponent,
                        MuggleWatcherLatest, MuggleWatcherTwoLists
@@ -228,7 +228,6 @@ class FrameSourcerBrownian(QtCore.QObject):
                                  self._cur_position).reshape(self._im_shape)
         I = self._I_func(self._count)
         im = np.exp((-R**2 / self._decay)) * I
-
         return im
 
     @QtCore.Slot()
@@ -244,7 +243,11 @@ class FrameSourcerBrownian(QtCore.QObject):
 
 # used below
 img_size = (150, 150)
-I_func = lambda count: (1 + .5*np.sin(count * np.pi / 15))
+period = 300
+I_func_sin = lambda count: (1 + .5*np.sin(2 * count * np.pi / period))
+center = 75
+sigma = 50
+I_func_gaus = lambda count: (1 + np.exp(-(count - center) ** 2 / sigma))
 
 
 def scale_fluc(scale, count):
@@ -255,8 +258,9 @@ def scale_fluc(scale, count):
     return None
 
 frame_source = FrameSourcerBrownian(img_size, delay=200, step_scale=.5,
-                                    I_fluc_function=I_func,
-                                    step_fluc_function=scale_fluc
+                                    I_fluc_function=I_func_gaus,
+                                    step_fluc_function=scale_fluc,
+                                    max_count=period//2
                                     )
 
 
@@ -267,7 +271,7 @@ dm = DataMuggler((('T', 'pad', True),
                   )
                  )
 dm2 = DataMuggler((('T', 'pad', True),
-                   ('mean', 'bfill', True),
+                   ('max', 'bfill', True),
                    ('x', 'bfill', True),
                    ('y', 'bfill', True),
                    ('count', 'bfill', True)
@@ -282,10 +286,10 @@ p1 = PipelineComponent(lambda msg, data: (msg,
                                           {'img': data['img'] * 5,
                                            'count': data['count']}))
 
-# find the mean and estimate (badly) the center of the blob
+# find the max and estimate (badly) the center of the blob
 p2 = PipelineComponent(lambda msg, data: (msg,
-                                          {'mean':
-                                             np.mean(data['img']),
+                                          {'max':
+                                             np.max(data['img']),
                                           'count': data['count'],
                                           'x': np.mean(np.argmax(data['img'],
                                                                  axis=0)),
@@ -315,9 +319,9 @@ mw4.sig.connect(plotter('center', 'x', 'y'))
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 7))
 
-# construct a watcher + viewer of the mean
-mw3 = MuggleWatcherTwoLists(dm2, 'count', 'mean', 'count')
-mw3.sig.connect(plotter("average intensity", "frame #", 'mean', ax=ax1))
+# construct a watcher + viewer of the max
+mw3 = MuggleWatcherTwoLists(dm2, 'count', 'max', 'count')
+mw3.sig.connect(plotter("maximum intensity", "frame #", 'max', ax=ax1))
 
 
 # construct a watcher + viewer of the temperature
