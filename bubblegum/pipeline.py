@@ -205,13 +205,10 @@ class DataMuggler(QtCore.QObject):
             time_stamp = [time_stamp, ]
             data_dict = {k: [v, ] for k, v in six.iteritems(data_dict)}
 
-        # validate all time-stamps
-        for time in time_stamp:
-            if not isinstance(time, self._time_validator):
-                raise TypeError('Non-iterable time_stamp [[{}]] is not a valid '
-                                'object for [[{}]]. It\'s type is: [[{}]].'.
-                                format(time_stamp, self._time_validator,
-                                       type(time_stamp)))
+        # TODO time step validation:
+        # A better way to do this to make the data frame and then check that
+        # the index it time like, then do something like this to sort out
+        # which ones are bad.
 
         # deal with non-scalar look up magic
         for k in data_dict:
