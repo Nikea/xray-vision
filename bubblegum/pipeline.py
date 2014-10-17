@@ -145,8 +145,6 @@ class DataMuggler(QtCore.QObject):
     # that have new data
     new_data = QtCore.Signal(list)
 
-    # make the muggler slicable so we can directly pass it to
-    # 2D viewers
     def __init__(self, col_spec, **kwargs):
         super(DataMuggler, self).__init__(**kwargs)
         valid_na_fill = {'pad', 'ffill', 'bfill', 'backpad'}
@@ -195,7 +193,7 @@ class DataMuggler(QtCore.QObject):
         try:
             iter(time_stamp)
         except TypeError:
-            # if time_stamp is not iterable, assume is a datetime object
+            # if time_stamp is not iterable, assume it is a datetime object
             # and we only have one data point to deal with so up-convert
             time_stamp = [time_stamp, ]
             data_dict = {k: [v, ] for k, v in six.iteritems(data_dict)}
