@@ -35,8 +35,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import six
-#from . import QtCore
-from matplotlib.backends.qt_compat import QtCore
+from . import QtCore
 
 import pandas as pd
 
