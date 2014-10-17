@@ -10,9 +10,10 @@ from nsls2 import core
 from bubblegum import QtCore
 from bubblegum.backend.mpl.cross_section_2d import (absolute_limit_factory,
                                                     CrossSection)
+from nsls2.fitting.model.physics_model import GaussModel
+import lmfit
 
-
-def plotter(title, xlabel, ylabel, ax=None, N=None, ln_sty=None):
+def plotter(title, xlabel, ylabel, ax=None, N=None, ln_sty=None, fit=False):
     """
     This function generates a function which will
     take two lists and plot them against each other.
@@ -44,6 +45,11 @@ def plotter(title, xlabel, ylabel, ax=None, N=None, ln_sty=None):
     ln_sty : dict, optional
         dictionary of kwargs to be unpacked into the plot call
 
+        CURRENTLY IGNORED
+
+    fit : bool, optional
+        If should try to fit
+
     Returns
     -------
     callabale
@@ -72,7 +78,13 @@ def plotter(title, xlabel, ylabel, ax=None, N=None, ln_sty=None):
         ax.set_ylabel(ylabel)
         txt = ax.annotate('', (0, 0), xytext=(1, 1), xycoords='axes fraction')
 
-    ln, = ax.plot([], [], **ln_sty)
+    ln_sty = 'bo-'
+    if fit:
+        ln_sty = 'bo'
+
+    ln, = ax.plot([], [], ln_sty)
+    if fit:
+        ln2, = ax.plot([], [], 'g-')
     time_tracker = {'old': time.time()}
 
     def inner(y, x):
@@ -89,9 +101,15 @@ def plotter(title, xlabel, ylabel, ax=None, N=None, ln_sty=None):
         '''
         if N is not None:
             x = x[:N]
-            y = y[:n]
+            y = y[:N]
 
         ln.set_data(x, y)
+        if fit and len(x) > 4:
+            m = GaussModel() + lmfit.models.ConstantModel()
+            res = m.fit(y, x=x, sigma=1, area=1, center=70, c=0)
+            ft_y = res.eval()
+            ln2.set_data(x, ft_y)
+
         # this should include blitting logic
         ax.relim()
         ax.autoscale_view(False, True, True)
@@ -321,7 +339,7 @@ fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 7))
 
 # construct a watcher + viewer of the max
 mw3 = MuggleWatcherTwoLists(dm2, 'count', 'max', 'count')
-mw3.sig.connect(plotter("maximum intensity", "frame #", 'max', ax=ax1))
+mw3.sig.connect(plotter("maximum intensity", "frame #", 'max', ax=ax1, fit=True))
 
 
 # construct a watcher + viewer of the temperature

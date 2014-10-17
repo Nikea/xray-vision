@@ -39,8 +39,7 @@ from . import QtCore
 
 import pandas as pd
 from datetime import datetime
-import sys
-from collections import deque
+
 
 class PipelineComponent(QtCore.QObject):
     """
