@@ -13,6 +13,7 @@ from bubblegum.backend.mpl.cross_section_2d import (absolute_limit_factory,
 from nsls2.fitting.model.physics_model import GaussModel
 import lmfit
 
+
 def plotter(title, xlabel, ylabel, ax=None, N=None, ln_sty=None, fit=False):
     """
     This function generates a function which will
@@ -116,6 +117,8 @@ def plotter(title, xlabel, ylabel, ax=None, N=None, ln_sty=None, fit=False):
 
         ln.set_data(x, y)
         if fit and len(x) > 4:
+            param['c'].value = np.min(y)
+            param['center'].value = x[np.argmax(y)]
             res = m.fit(y, x=x, params=param)
             # try to be clever and iterative
             param.update(res.params)
