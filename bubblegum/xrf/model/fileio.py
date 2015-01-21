@@ -42,13 +42,6 @@ logger = logging.getLogger(__name__)
 
 from atom.api import Atom, Str, observe, Typed, Dict, List, Int
 
-# The following lines need to be updated.
-# A better design to hook up with meta data store needs to be done.
-folder = '/Users/Li/Research/X-ray/Research_work/all_code/nsls2_gui/nsls2_gui'
-file = 'NSLS_X27.txt'
-data_path = os.path.join(folder, file)
-the_data = np.loadtxt(data_path)
-
 
 class FileIOModel(Atom):
     """
@@ -56,24 +49,31 @@ class FileIOModel(Atom):
 
     Attributes
     ----------
-    folder_name : str
-    file_name : str
+    working_directory : str
+    data_file : str
     data : array
         Experiment data.
     file_path : str
     load_status : str
         Description of file loading status
     """
+<<<<<<< HEAD
     folder_name = Str(folder)
     file_name = Str(file)
     file_names = List()
     data = Typed(np.ndarray)
     file_path = Str(data_path)
     path_list = List()
+=======
+    working_directory = Str()
+    data_file = Str()
+    data = Typed(np.ndarray)
+>>>>>>> eric_autofit
     load_status = Str()
     file_opt = Int()
     data_dict = Dict()
 
+<<<<<<< HEAD
     def __init__(self):
         pass
         #self.load_data()
@@ -87,9 +87,26 @@ class FileIOModel(Atom):
     #@observe('file_path')
     #def path_changed(self, changed):
     #    self.load_data()
+=======
+    def __init__(self, working_directory=None, data_file=None, *args, **kwargs):
+        if working_directory is None:
+            working_directory = os.path.expanduser('~')
+
+        with self.suppress_notifications():
+            self.working_directory = working_directory
+            self.data_file = data_file
+        # load the data file
+        self.load_data()
+
+    @observe('working_directory', 'data_file')
+    def path_changed(self, changed):
+        if changed['type'] == 'create':
+            return
+        self.load_data()
+>>>>>>> eric_autofit
 
     @observe('data')
-    def data_changed(self, data):
+    def data_changed(self, changed):
         print('The data was changed. First five lines of new data:\n{}'
               ''.format(self.data[:5]))
 
@@ -97,6 +114,7 @@ class FileIOModel(Atom):
         """
         This function needs to be updated to handle other data formats.
         """
+<<<<<<< HEAD
         #try:
         self.data = np.loadtxt(self.file_path)
         #self.load_status = 'File {} is loaded successfully.'.format(self.file_name)
@@ -127,3 +145,13 @@ class FileIOModel(Atom):
         self.file_name = self.file_names[self.file_opt-1]
         #self.file_path = os.path.join(self.folder_name, fname)
         self.data = self.data_dict[str(self.file_name)]
+=======
+        file_path = os.path.join(self.working_directory, self.data_file)
+        try:
+            self.data = np.loadtxt(file_path)
+            self.load_status = 'File {} is loaded successfully.'.format(self.data_file)
+        except IOError:
+            self.load_status = 'File {} doesn\'t exist.'.format(self.data_file)
+        except ValueError:
+            self.load_status = 'File {} can\'t be loaded. '.format(self.data_file)
+>>>>>>> eric_autofit

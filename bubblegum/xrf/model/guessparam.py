@@ -43,16 +43,75 @@ import copy
 import logging
 logger = logging.getLogger(__name__)
 
-from atom.api import Atom, Str, observe, Typed, Int, Dict, List
+from pprint import pprint
+from atom.api import Atom, Str, observe, Typed, Int, Dict, List, Float, Enum
 
-from skxray.fitting.xrf_model import (ModelSpectrum, set_range, k_line, l_line, m_line,
-                                      get_linear_model, PreFitAnalysis)
+from skxray.fitting.xrf_model import (ModelSpectrum, set_range, k_line, l_line,
+                                      m_line, get_linear_model, PreFitAnalysis)
 from skxray.fitting.background import snip_method
 
+bound_options = ['none', 'lohi', 'fixed', 'lo', 'hi']
+class Parameter(Atom):
+    # todo make sure that these are the only valid bound types
+    bound_type = Enum(*bound_options)
+    min = Float(-np.inf)
+    max = Float(np.inf)
+    value = Float()
+    default_value = Float()
+    free_more = Enum(*bound_options)
+    adjust_element = Enum(*bound_options)
+    e_calibration = Enum(*bound_options)
+    linear = Enum(*bound_options)
+    name = Str()
+    description = Str()
+    tool_tip = Str()
 
-# This is not a right way to define path. To be updated
-data_path = '/Users/Li/Research/X-ray/Research_work/all_code/nsls2_gui/nsls2_gui/xrf_parameter.json'
+    @observe('name')
+    def update_displayed_name(self, changed):
+        if not self.description:
+            self.description = self.name
 
+    def __repr__(self):
+        return ("Parameter(bound_type={}, min={}, max={}, value={}, "
+               "default_value={}, free_more={}, adjust_element={}, "
+               "e_calibration={}, linear={}, name={}, description={}, "
+               "toop_tip={}".format(
+            self.bound_type, self.min, self.max, self.value, self.default_value,
+            self.free_more, self.adjust_element, self.e_calibration,
+            self.linear, self.name, self.description, self.tool_tip))
+
+    def to_dict(self):
+        return {
+            'bound_type': self.bound_type,
+            'min': self.min,
+            'max': self.max,
+            'value': self.value,
+            'default_value': self.default_value,
+            'free_more': self.free_more,
+            'adjust_element': self.adjust_element,
+            'e_calibration': self.e_calibration,
+            'linear': self.linear,
+            'name': self.name,
+            'description': self.description,
+            'tool_tip': self.tool_tip,
+        }
+
+def format_dict(parameter_object_dict, element_list):
+    """Format the dictionary that scikit-xray expects
+    """
+    param_dict = {key: value.to_dict() for key, value
+                  in six.iteritems(parameter_object_dict)}
+    elo = param_dict.pop('energy_bound_low')['value']
+    ehi = param_dict.pop('energy_bound_high')['value']
+    # reformat the dictionary that scikit-xray expects
+    non_fitting_values = {'non_fitting_values': {
+        'energy_bound_low': elo,
+        'energy_bound_high': ehi,
+        'element_list': element_list
+    }}
+    param_dict.update(non_fitting_values)
+
+    return param_dict
 
 class GuessParamModel(Atom):
     """
@@ -60,9 +119,10 @@ class GuessParamModel(Atom):
 
     Attributes
     ----------
-    param_d : dict
-        The fitting parameters
-    param_d_perm : dict
+    parameters : `atom.Dict`
+        A list of `Parameter` objects, subclassed from the `Atom` base class.
+        These `Parameter` objects hold all relevant xrf information
+    default_params : dict
         Save all the fitting parameters. Values will not be changed in this dict.
     data : array
         1D array of spectrum
@@ -76,39 +136,50 @@ class GuessParamModel(Atom):
         Results from k lines
     total_y_l : dict
         Results from l lines
-    param_path : str
+    parameter_file_path : str
         Path to parameter file
     param_status : str
         Loading status of parameter file
     """
-    param_d = Dict()
-    param_d_perm = Dict()
+    parameters = Dict()
     data = Typed(object)
     prefit_x = Typed(object)
     result_dict = Typed(object)
     status_dict = Dict(value=bool, key=str)
     total_y = Typed(object)
     total_y_l = Typed(object)
-    param_path = Str(data_path)
-    param_status = Str('Use default parameter file.')
+    param_status = Str()
+    element_list = List()
 
-    def __init__(self):
-        self.get_param()
-        self.total_y
+    def __init__(self, default_parameters, *args, **kwargs):
+        self.get_param(default_parameters)
         self.total_y_l = {}
 
-    def get_param(self):
-        try:
-            with open(self.param_path, 'r') as json_data:
-                self.param_d_perm = json.load(json_data)
-            self.param_status = 'Parameter file {} is loaded.'.format(self.param_path.split('/')[-1])
-            self.param_d = copy.deepcopy(self.param_d_perm)
-        except ValueError:
-            self.param_status = 'Parameter file can\'t be loaded.'
-
-    @observe('param_path')
-    def set_param(self, changed):
-        self.get_param()
+    def get_param(self, default_parameters):
+        non_fitting_values = default_parameters.pop('non_fitting_values')
+        element_list = non_fitting_values.pop('element_list')
+        if not isinstance(element_list, list):
+            element_list = element_list.split(',')
+        self.element_list = element_list
+        elo = non_fitting_values.pop('energy_bound_low')
+        ehi = non_fitting_values.pop('energy_bound_high')
+        self.parameters = {
+            'energy_bound_low': Parameter(name='E low (keV)', value=elo,
+                                          default_value=elo),
+            'energy_bound_high': Parameter(name='E high (keV)',
+                                           default_value=ehi, value=ehi)
+        }
+        self.parameters.update({
+            param_name: Parameter(name=param_name,
+                                  default_value=param_dict['value'],
+                                  **param_dict)
+            for param_name, param_dict in six.iteritems(default_parameters)
+        } )
+        pprint(self.parameters)
+        # sort by the parameter name
+        # parameters.sort(key=lambda s: s.name.lower())
+        # self.param_status = ('Parameter file {} is loaded'.format(
+        #     self.parameter_file_path.split('/')[-1]))
 
     def set_data(self, data):
         """
@@ -120,18 +191,18 @@ class GuessParamModel(Atom):
         self.data = np.asarray(data)
 
     def save_param(self, param):
-        self.param_d = param
+        self.parameters = param
 
     def find_peak(self):
         """run automatic peak finding."""
-        #for k,v in six.iteritems(self.param_d):
+        #for k,v in six.iteritems(self.parameters):
         #    print('{}:{}'.format(k,v))
-        self.prefit_x, self.result_dict, bg = pre_fit_linear(self.param_d, self.data)
+        param_dict = format_dict(self.parameters, self.element_list)
+        self.prefit_x, self.result_dict, bg = pre_fit_linear(self.data,
+                                                             param_dict)
 
         self.result_dict.update(background=bg)
 
-        #with self.suppress_notifications():
-            #self.status_list = [k for k in six.iterkeys(self.result_dict)]
         # save the plotting status for a given element peak
         self.status_dict = {k: True for k in six.iterkeys(self.result_dict)}
 
@@ -155,17 +226,16 @@ class GuessParamModel(Atom):
                 del self.total_y[k]
 
 
-def pre_fit_linear(parameter_dict, y0):
+def pre_fit_linear(y0, fitting_parameters):
     """
     Run prefit to get initial elements.
 
     Parameters
     ----------
-    parameter_dict : dict
-        Fitting parameters
     y0 : array
         Spectrum intensity
-
+    fitting_parameters : dict
+        Fitting parameters
     Returns
     -------
     x : array
@@ -175,29 +245,27 @@ def pre_fit_linear(parameter_dict, y0):
     bg : array
         Calculated background ground
     """
-
     x0 = np.arange(len(y0))
-    x, y = set_range(parameter_dict, x0, y0)
-
+    x, y = set_range(fitting_parameters, x0, y0)
     # get background
-    bg = snip_method(y, parameter_dict['e_offset']['value'],
-                     parameter_dict['e_linear']['value'],
-                     parameter_dict['e_quadratic']['value'])
+    bg = snip_method(y, fitting_parameters['e_offset']['value'],
+                     fitting_parameters['e_linear']['value'],
+                     fitting_parameters['e_quadratic']['value'])
 
     y = y - bg
 
     element_list = k_line + l_line + m_line
     new_element = ', '.join(element_list)
-    parameter_dict['non_fitting_values']['element_list'] = new_element
+    fitting_parameters['non_fitting_values']['element_list'] = new_element
 
     non_element = ['compton', 'elastic']
     total_list = element_list + non_element
     total_list = [str(v) for v in total_list]
 
-    matv = get_linear_model(x, parameter_dict)
+    matv = get_linear_model(x, fitting_parameters)
 
-    x = parameter_dict['e_offset']['value'] + parameter_dict['e_linear']['value']*x + \
-        parameter_dict['e_quadratic']['value'] * x**2
+    x = fitting_parameters['e_offset']['value'] + fitting_parameters['e_linear']['value']*x + \
+        fitting_parameters['e_quadratic']['value'] * x**2
 
     PF = PreFitAnalysis(y, matv)
     out, res = PF.nnls_fit_weight()

@@ -35,11 +35,51 @@
 
 __author__ = 'Li Li'
 
+import os
+import numpy as np
 import enaml
 from enaml.qt.qt_application import QtApplication
 from bubblegum.xrf.model.fileio import FileIOModel
 from bubblegum.xrf.model.lineplot import LinePlotModel
 from bubblegum.xrf.model.guessparam import GuessParamModel
+import json
+from pprint import pprint
+
+def get_defaults():
+
+    working_directory = os.path.join(os.path.expanduser('~'), 'Downloads')
+    data_file = 'NSLS_X27.txt'
+    data_path = os.path.join(working_directory, data_file)
+    # grab the default parameter file
+    default_parameter_file = os.path.join(os.path.expanduser('~'), '.bubblegum',
+                                      'xrf_parameter_default.json')
+    with open(default_parameter_file, 'r') as json_data:
+        default_parameters = json.load(json_data)
+
+    pprint(default_parameters)
+    # see if there is a user parameter file
+    user_parameter_file = os.path.join(os.path.expanduser('~'), '.bubblegum',
+                                      'xrf_parameter_user.json')
+    try:
+        with open(user_parameter_file, 'r') as json_data:
+            user = json.load(json_data)
+
+        default_parameters.update(user)
+    except IOError:
+        # user file doesn't exist
+        pass
+
+    pprint(default_parameters)
+
+
+
+    defaults = {'working_directory': working_directory,
+                'data_file': data_file,
+                'data_path': data_path,
+                'default_parameters': default_parameters,
+    }
+
+    return defaults
 
 
 def run():
@@ -47,10 +87,13 @@ def run():
     with enaml.imports():
         from bubblegum.xrf.view.main_window import XRFGui
 
+    defaults = get_defaults()
+
     xrfview = XRFGui()
-    xrfview.file_M = FileIOModel()
-    xrfview.p_guess_M = GuessParamModel()
-    xrfview.plot_M = LinePlotModel()
+
+    xrfview.io_model = FileIOModel(**defaults)
+    xrfview.param_model = GuessParamModel(**defaults)
+    xrfview.plot_model = LinePlotModel()
 
     xrfview.show()
     app.start()
