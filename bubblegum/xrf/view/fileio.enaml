@@ -47,25 +47,22 @@ enamldef FileView(DockItem): file_view:
     attr param_model
     Container:
         Form:
-<<<<<<< HEAD
-            Label: lb_tool_name:
-                text = 'PyXRF: X-ray Fluorescence Analysis Tool'
-        Container:
-            constraints = [
-                vbox(
-                    hbox(btn_folder, btn_fd),
-                    #hbox(btn_file, fd),
-                    #hbox(load_lbl),
-                    hbox(btn_files, CB),
-                    hbox(files_load),
-                    hbox(pb_load, fd_load),
-                    hbox(param_lbl),
-                ),
-                btn_folder.width == btn_files.width,
-                btn_folder.width == pb_load.width,
-            ]
-=======
->>>>>>> eric_autofit
+#            Label: lb_tool_name:
+#                text = 'PyXRF: X-ray Fluorescence Analysis Tool'
+            #Container:
+            #constraints = [
+            #    vbox(
+            #        hbox(btn_folder, btn_fd),
+            #        #hbox(btn_file, fd),
+            #        #hbox(load_lbl),
+            #        hbox(btn_files, CB),
+            #        hbox(files_load),
+            #        hbox(pb_load, fd_load),
+            #        hbox(param_lbl),
+            #    ),
+            #    btn_folder.width == btn_files.width,
+            #    btn_folder.width == pb_load.width,
+            #]
             PushButton: btn_folder:
                 text = "Working Directory"
                 clicked ::
@@ -73,27 +70,6 @@ enamldef FileView(DockItem): file_view:
                     if path:
                         io_model.working_directory = path
             Field: btn_fd:
-<<<<<<< HEAD
-                text := io_model.folder_name
-            #PushButton: btn_file:
-            #    text = "Open File"
-                #maximum_size = 200
-            #    clicked ::
-            #        path = FileDialogEx.get_open_file_name(file_view, current_path=io_model.folder_name)
-            #        if path:
-            #            print('path is {}'.format(path))
-            #            pathlist = path.split('/')
-            #            io_model.file_name = pathlist[-1]
-            #            fd.text = pathlist[-1]
-            #Field: fd:
-            #    text := io_model.file_name
-            #    submit_triggers = ['lost_focus', 'return_pressed', 'auto_sync']
-            #PushButton:
-            #    text = 'Load Files'
-            #    clicked ::
-            #        io_model.load_data()
-            #        load_lbl.text = io_model.load_status
-=======
                 text := io_model.working_directory
             PushButton: btn_file:
                 text = "Data File"
@@ -105,12 +81,11 @@ enamldef FileView(DockItem): file_view:
                         fd.text = pathlist[-1]
             Field: fd:
                 text := io_model.data_file
->>>>>>> eric_autofit
 
             PushButton: btn_files:
                 text = "Open Files"
                 clicked ::
-                    path = FileDialogEx.get_open_file_names(file_view, current_path=io_model.folder_name)
+                    path = FileDialogEx.get_open_file_names(file_view, current_path=io_model.working_directory)
                     if path:
                         pathlist = [item.split('/')[-1] for item in path] #path[1].split('/')
                         print('path list: {} '.format(pathlist))

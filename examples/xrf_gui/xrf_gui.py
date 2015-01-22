@@ -47,19 +47,24 @@ from pprint import pprint
 
 def get_defaults():
 
-    working_directory = os.path.join(os.path.expanduser('~'), 'Downloads')
+    #working_directory = os.path.join(os.path.expanduser('~'), 'Downloads')
+    working_directory = '/Users/Li/Research/X-ray/Research_work/all_code/nsls2_gui/nsls2_gui'
     data_file = 'NSLS_X27.txt'
     data_path = os.path.join(working_directory, data_file)
     # grab the default parameter file
-    default_parameter_file = os.path.join(os.path.expanduser('~'), '.bubblegum',
-                                      'xrf_parameter_default.json')
+    #default_parameter_file = os.path.join(os.path.expanduser('~'), '.bubblegum',
+    #                                  'xrf_parameter_default.json')
+
+    default_parameter_file = '/Users/Li/Research/X-ray/Research_work/all_code/nsls2_gui/nsls2_gui/abc.json'
     with open(default_parameter_file, 'r') as json_data:
         default_parameters = json.load(json_data)
 
     pprint(default_parameters)
     # see if there is a user parameter file
-    user_parameter_file = os.path.join(os.path.expanduser('~'), '.bubblegum',
-                                      'xrf_parameter_user.json')
+    #user_parameter_file = os.path.join(os.path.expanduser('~'), '.bubblegum',
+    #                                  'xrf_parameter_user.json')
+    user_parameter_file = default_parameter_file
+
     try:
         with open(user_parameter_file, 'r') as json_data:
             user = json.load(json_data)

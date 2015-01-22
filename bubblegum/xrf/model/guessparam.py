@@ -58,6 +58,7 @@ class Parameter(Atom):
     max = Float(np.inf)
     value = Float()
     default_value = Float()
+    fit_with_tail = Enum(*bound_options)
     free_more = Enum(*bound_options)
     adjust_element = Enum(*bound_options)
     e_calibration = Enum(*bound_options)
@@ -87,6 +88,7 @@ class Parameter(Atom):
             'max': self.max,
             'value': self.value,
             'default_value': self.default_value,
+            'fit_with_tail': self.fit_with_tail,
             'free_more': self.free_more,
             'adjust_element': self.adjust_element,
             'e_calibration': self.e_calibration,

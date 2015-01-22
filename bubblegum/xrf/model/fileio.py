@@ -57,37 +57,22 @@ class FileIOModel(Atom):
     load_status : str
         Description of file loading status
     """
-<<<<<<< HEAD
-    folder_name = Str(folder)
+    #folder_name = Str(folder)
     file_name = Str(file)
     file_names = List()
     data = Typed(np.ndarray)
-    file_path = Str(data_path)
+    #file_path = Str(data_path)
+    file_path = Str()
     path_list = List()
-=======
+
     working_directory = Str()
     data_file = Str()
     data = Typed(np.ndarray)
->>>>>>> eric_autofit
+
     load_status = Str()
     file_opt = Int()
     data_dict = Dict()
 
-<<<<<<< HEAD
-    def __init__(self):
-        pass
-        #self.load_data()
-
-    #@observe('folder_name', 'file_name')
-    #def update(self, changed):
-    #    if changed['type'] == 'create':
-    #        return
-    #    self.file_path = os.path.join(self.folder_name, self.file_name)
-
-    #@observe('file_path')
-    #def path_changed(self, changed):
-    #    self.load_data()
-=======
     def __init__(self, working_directory=None, data_file=None, *args, **kwargs):
         if working_directory is None:
             working_directory = os.path.expanduser('~')
@@ -103,7 +88,6 @@ class FileIOModel(Atom):
         if changed['type'] == 'create':
             return
         self.load_data()
->>>>>>> eric_autofit
 
     @observe('data')
     def data_changed(self, changed):
@@ -114,8 +98,9 @@ class FileIOModel(Atom):
         """
         This function needs to be updated to handle other data formats.
         """
-<<<<<<< HEAD
+#<<<<<<< HEAD
         #try:
+        self.file_path = os.path.join(self.working_directory, self.data_file)
         self.data = np.loadtxt(self.file_path)
         #self.load_status = 'File {} is loaded successfully.'.format(self.file_name)
         #except IOError:
@@ -127,7 +112,7 @@ class FileIOModel(Atom):
     def update_more_data(self, changed):
         for fname in self.file_names:
             try:
-                self.file_path = os.path.join(self.folder_name, fname)
+                self.file_path = os.path.join(self.working_directory, fname)
                 self.load_data()
                 self.file_name = fname
                 self.data_dict.update({fname: self.data.copy()})
@@ -145,13 +130,12 @@ class FileIOModel(Atom):
         self.file_name = self.file_names[self.file_opt-1]
         #self.file_path = os.path.join(self.folder_name, fname)
         self.data = self.data_dict[str(self.file_name)]
-=======
-        file_path = os.path.join(self.working_directory, self.data_file)
-        try:
-            self.data = np.loadtxt(file_path)
-            self.load_status = 'File {} is loaded successfully.'.format(self.data_file)
-        except IOError:
-            self.load_status = 'File {} doesn\'t exist.'.format(self.data_file)
-        except ValueError:
-            self.load_status = 'File {} can\'t be loaded. '.format(self.data_file)
->>>>>>> eric_autofit
+
+        # file_path = os.path.join(self.working_directory, self.data_file)
+        # try:
+        #     self.data = np.loadtxt(file_path)
+        #     self.load_status = 'File {} is loaded successfully.'.format(self.data_file)
+        # except IOError:
+        #     self.load_status = 'File {} doesn\'t exist.'.format(self.data_file)
+        # except ValueError:
+        #     self.load_status = 'File {} can\'t be loaded. '.format(self.data_file)
