@@ -17,12 +17,14 @@ requirements:
     - numpy
     - six
     - matplotlib
+    - enaml
   run:
     - python
     - numpy
     - matplotlib
     - pyqt
     - six
+    - enaml
 
 test:
   requires:
