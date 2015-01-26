@@ -1,0 +1,254 @@
+# ######################################################################
+# Copyright (c) 2014, Brookhaven Science Associates, Brookhaven        #
+# National Laboratory. All rights reserved.                            #
+#                                                                      #
+# Redistribution and use in source and binary forms, with or without   #
+# modification, are permitted provided that the following conditions   #
+# are met:                                                             #
+#                                                                      #
+# * Redistributions of source code must retain the above copyright     #
+#   notice, this list of conditions and the following disclaimer.      #
+#                                                                      #
+# * Redistributions in binary form must reproduce the above copyright  #
+#   notice this list of conditions and the following disclaimer in     #
+#   the documentation and/or other materials provided with the         #
+#   distribution.                                                      #
+#                                                                      #
+# * Neither the name of the Brookhaven Science Associates, Brookhaven  #
+#   National Laboratory nor the names of its contributors may be used  #
+#   to endorse or promote products derived from this software without  #
+#   specific prior written permission.                                 #
+#                                                                      #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS  #
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT    #
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS    #
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE       #
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,           #
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES   #
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR   #
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)   #
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,  #
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OTHERWISE) ARISING   #
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE   #
+# POSSIBILITY OF SUCH DAMAGE.                                          #
+########################################################################
+
+__author__ = 'Li Li'
+
+from enaml.widgets.api import (Container, PushButton, Label,
+                               Form, Field, FileDialogEx, DockItem,
+                               DockArea, CheckBox, ComboBox, PopupView,
+                               SpinBox, ScrollArea, Window)
+from enaml.layout.api import (hbox, vbox, HSplitLayout, VSplitLayout,
+                              spacer, grid)
+from enaml.core.api import Include, Looper
+from enaml.stdlib.fields import FloatField
+from enaml.layout.geometry import Box
+import json
+from auto_enaml.api import AutoView
+
+import os
+
+from ..model.guessparam import format_dict
+
+import numpy as np
+import six
+from skxray.constants.api import XrfElement as Element
+
+enamldef GuessParamView(DockItem): param_view:
+    attr param_model
+    attr io_model
+    attr plot_model
+
+    Container:
+        constraints = [
+            vbox(
+                top_cntr,
+                hbox(pb12, pb13, pb14),
+                hbox(pb10, pb11, spacer),
+                #hbox(lb15),
+            ),
+        ]
+        Container: top_cntr:
+            ScrollArea:
+
+                Form:
+                    Looper: looper:
+                        iterable << sorted(param_model.parameters.keys())
+                        Label:
+                            text = param_model.parameters[loop_item].description
+                            tool_tip = param_model.parameters[loop_item].tool_tip
+                        Container:
+                            padding = Box(0, 0, 0, 0)
+                            constraints = [hbox(ff, pb)]
+                            FloatField: ff:
+                                minimum := param_model.parameters[loop_item].min
+                                maximum := param_model.parameters[loop_item].max
+                                value := param_model.parameters[loop_item].value
+                            PushButton: pb:
+                                text = 'Default'
+                                clicked ::
+                                    ff.value = param_model.parameters[loop_item].default_value
+                    row_spacing = -1
+                    PushButton:
+                        text = 'Edit Defaults'
+                        clicked ::
+                            ParameterEdit.parameter_model = param_model
+                            ParameterEdit().show()
+
+        PushButton: pb10:
+            text = 'Save'
+            clicked ::
+                pass
+                #param_model.save_param(param_model.parameters)
+        PushButton: pb11:
+            text = 'Save As'
+            clicked ::
+                pass
+        PushButton: pb12:
+            text = 'Find Peaks'
+            #status_tip = 'Not Running.'
+            clicked ::
+                param_model.set_data(io_model.data)
+                param_model.find_peak()
+                param_model.arange_prefit_result()
+                status_tip = 'Running'
+                if (len(param_model.total_y) == 0):
+                    #lb15.text = 'No auto fit result is available.'
+                    pb13.enabled = False
+                    pb14.enabled = False
+
+                else:
+                    #lb15.text = 'Auto fit is finished.'
+                    pb13.enabled = True
+                    pb14.enabled = True
+
+        PushButton: pb13:
+            text = 'Overlap to Spectrum'
+            enabled = False
+            checkable = True
+            clicked ::
+                if checked:
+                    plot_model.set_prefit_data(param_model.prefit_x, param_model.total_y, param_model.total_y_l)
+                    #plot_model.set_prefit_bg(param_model.prefit_bg)
+                    plot_model.plot_data()
+                    pb13.text = 'Remove Plot'
+                else:
+                    pb13.text = 'Overlap to Spectrum'
+                    plot_model.set_prefit_data([], {}, {})
+                    plot_model.plot_data()
+
+        PushButton: pb14:
+            text = 'Show Results'
+            enabled = False
+            clicked ::
+                PreFitResult.param_model = param_model
+                PreFitResult.plot_model = plot_model
+                PreFitResult().show()
+        #Label: lb15:
+        #    text = 'No auto fit result is available.'
+            #max_length = 10
+            #maximum_size = 100
+
+def save_defaults(parameter_model):
+    user_path = os.path.join(os.path.expanduser('~'), '.bubblegum',
+                             'xrf_parameter_user.json')
+    # format the dictionary
+    dct = format_dict(parameter_model.parameters, parameter_model.element_list)
+    json_out = json.dumps(dct)
+    with open(user_path, 'w') as out_file:
+        out_file.write(json_out)
+
+
+enamldef ParameterEdit(Window):
+    attr parameter_model
+    destroy_on_close = False
+    Container:
+        ComboBox: cmb:
+            items << sorted(parameter_model.parameters.keys())
+            selected_item ::
+                av.model = parameter_model.parameters[selected_item]
+        AutoView: av:
+            model = parameter_model.parameters.values()[0]
+            initialized ::
+                for o in objects:
+                    o.label.tool_tip = str(o)
+        PushButton: save:
+            text = "Save changes to disk"
+            clicked ::
+                save_defaults(parameter_model)
+
+
+enamldef PreFitResult(Window):
+    attr param_model
+    attr plot_model
+    title = 'Results of Auto Peak Finding'
+    Container:
+        ScrollArea:
+            constraints = [height >= 200]
+            Container:
+                Form:
+                    Label:
+                        text = '{:>20} {:>20} {:>20} {:>20}'.format('Z', 'emission line',
+                                                                'peak INT', 'norm INT')
+                    Label:
+                        text = 'plot'
+
+                    Looper: looper:
+                        iterable << list(six.iterkeys(param_model.result_dict))
+                        Label:
+                            font = 'monospace'
+                            #align = 'left'
+                            text = '{:>20} {:>20} {:>20} {:>20}'.format(
+                                get_Z(loop_item),
+                                loop_item,
+                                np.around(np.max(param_model.result_dict[loop_item]), 1),
+                                np.around(np.max(param_model.result_dict[loop_item])/getMax(param_model.result_dict), 4))
+                        PushButton: cb:
+                            text = 'Plot line'
+
+                            checkable = True
+                            checked = param_model.status_dict[loop_item]
+                            clicked ::
+                                param_model.status_dict[loop_item] = checked
+                                param_model.arange_prefit_result()
+                                plot_model.set_prefit_data(param_model.prefit_x, param_model.total_y, param_model.total_y_l)
+                                plot_model.plot_data()
+
+
+def get_Z(ename):
+    """
+    Return element's Z number.
+
+    Parameters
+    ----------
+    ename : str
+        element name
+
+    Returns
+    -------
+    int or None
+        element Z number
+
+    """
+
+    strip_line = lambda ename: ename.split('_')[0]
+
+    non_element = ['compton', 'elastic', 'background']
+    if ename in non_element:
+        return None
+    else:
+        e = Element(strip_line(ename))
+        return e.Z
+
+
+def get_max(dictv):
+    """
+    Return max value from all dict values.
+
+    Parameters
+    ----------
+    dictv : dict
+        Saving all fitting results
+    """
+    return reduce(max, map(np.max, six.itervalues(dictv)))
