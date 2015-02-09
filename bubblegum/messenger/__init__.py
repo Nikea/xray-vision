@@ -38,14 +38,10 @@ from __future__ import (absolute_import, division, print_function,
 
 from .. import QtCore, QtGui
 
-# other relevant imports
-
-# local package imports
-from ..backend import AbstractDataView, AbstractDataView1D, AbstractDataView2D
+import numpy as np
 
 import logging
 logger = logging.getLogger(__name__)
-
 
 class AbstractMessenger(QtCore.QObject):
     """
@@ -106,7 +102,8 @@ class AbstractMessenger1D(AbstractMessenger):
         y_list : list
             1 or more columns of y-coordinates.  Must be the same shape as x.
         """
-        self._view.add_data(lbl_list=lbl_list, x_list=x_list, y_list=y_list)
+        for lbl, x, y in zip(lbl_list, x_list, y_list):
+            self._view.data_dict[lbl] = (x, y)
         self.sl_update_view()
 
     @QtCore.Slot(list, list, list)
@@ -123,7 +120,11 @@ class AbstractMessenger1D(AbstractMessenger):
         y_list : list
             1 or more columns of y-coordinates.  Must be the same shape as x.
         """
-        self._view.append_data(lbl_list=lbl_list, x_list=x_list, y_list=y_list)
+        print(lbl_list[0], x_list[0][:5], y_list[0][:5])
+        for lbl, x, y in zip(lbl_list, x_list, y_list):
+            x_vals, y_vals = self._view.data_dict[lbl]
+            self._view.data_dict[lbl] = (np.hstack((x_vals, x)),
+                                         np.hstack((y_vals, y)))
         self.sl_update_view()
 
 
@@ -179,7 +180,7 @@ class AbstractMessenger2D(AbstractMessenger):
                                axis_list=axis_list,
                                append_to_end_list=append_to_end_list)
         self.sl_update_plot()
-        
+
     @QtCore.Slot(list, list, list, list)
     def sl_add_datum(self, lbl_list, x_list, y_list, val_list):
         """

@@ -35,7 +35,6 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from .. import QtCore, QtGui
 from six.moves import zip
 from matplotlib.widgets import Cursor
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -191,7 +190,7 @@ class CrossSection2DView(AbstractDataView2D, AbstractMPLDataView):
         self._xsection.update_cmap(cmap)
 
     def update_image(self, img_idx):
-        self._xsection.update_image(self._data_dict[self._key_list[img_idx]])
+        self._xsection.update_image(self._data_source[self._key_list[img_idx]])
 
     def replot(self):
         """

@@ -59,7 +59,6 @@ class Stack1DMessenger(AbstractMessenger1D, AbstractMPLMessenger):
         super(Stack1DMessenger, self).__init__(*args, **kwargs)
         # init the view
         self._view = Stack1DView(fig=self._fig, data_dict=data_dict)
-
         self._ctrl_widget = make_1D_control_box("Stack 1D")
         # connect signals to slots
         self.connect_sigs_to_slots()

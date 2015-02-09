@@ -209,3 +209,7 @@ class Stack1DView(AbstractMPLDataView):
         self._data_dict = None
         # call the replot function
         self.replot()
+
+    @property
+    def data_dict(self):
+        return self._data_dict

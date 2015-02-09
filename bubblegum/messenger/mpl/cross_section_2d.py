@@ -104,7 +104,7 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
         """
         self._view.update_image(img_idx)
         self.sl_update_view()
-        im = self._view._data_dict[self._view._key_list[img_idx]]
+        im = self._view._data_source[self._view._key_list[img_idx]]
         self._ctrl_widget.set_im_lim(lo=np.min(im), hi=np.max(im))
 
     @QtCore.Slot(np.ndarray)
