@@ -73,14 +73,13 @@ class Stack1DMainWindow(QtGui.QMainWindow):
     """
 
     def __init__(self, title=None, parent=None,
-                 data_list=None, key_list=None):
+                 data_dict=None, key_list=None):
         QtGui.QMainWindow.__init__(self, parent)
         if title is None:
             title = "1D Stack"
         self.setWindowTitle(title)
         # create view widget, control widget and messenger pass-through
-        self._messenger = Stack1DMessenger(data_list=data_list,
-                                           key_list=key_list)
+        self._messenger = Stack1DMessenger(data_dict=data_dict)
 
         self._ctrl_widget = self._messenger._ctrl_widget
         self._display = self._messenger._display
