@@ -1,5 +1,5 @@
 # ######################################################################
-# Copyright (c) 2014, Brookhaven Science Associates, Brookhaven        #
+# Copyright (c) 2014-2015, Brookhaven Science Associates, Brookhaven   #
 # National Laboratory. All rights reserved.                            #
 #                                                                      #
 # Redistribution and use in source and binary forms, with or without   #
@@ -32,69 +32,64 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE   #
 # POSSIBILITY OF SUCH DAMAGE.                                          #
 ########################################################################
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
 
-from matplotlib import cm
+from atom.api import (Atom, Typed, Str, Dict, observe, Float)
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
 
-import logging
-logger = logging.getLogger(__name__)
+from bubblegum.backend.mpl.stack_1d import Stack1DView
 
 
-class AbstractMPLDataView(object):
-    """
-    Class docstring
-    """
-    _default_cmap = 'gray'
-    _default_norm = cm.colors.Normalize(vmin=0, vmax=1)
+class Plot1dModel(Atom):
+    _fig = Typed(Figure)
+    _ax = Typed(Axes)
+    _data_stack = Typed(Stack1DView)
+    _data_dict = Dict()
+    _cmap = Str()
+    _norm = Str()
+    horz_offset = Float()
+    vert_offset = Float()
 
-    def __init__(self, ax, cmap=None, norm=None, *args, **kwargs):
-        """
-        Docstring
+    def __init__(self):
+        with self.suppress_notifications():
+            # plotting initialization
+            self._fig = Figure(figsize=(1,1))
+            self._fig.set_tight_layout(True)
+            self._data_dict = {}
+            self._ax = self._fig.add_subplot(111)
 
-        Parameters
-        ----------
-        ax : live mpl.axes.Axes object
-        """
-        # call up the inheritance chain
-        super(AbstractMPLDataView, self).__init__(*args, **kwargs)
+        self._data_stack = Stack1DView(ax=self._ax,
+                                       data_dict=self._data_dict)
+    @observe('horz_offset')
+    def update_horz_offset(self, changed):
+        print('horz_offset changed')
+        self._data_stack.set_horz_offset(self.horz_offset)
+        self.replot()
 
-        # set some defaults
-        if cmap is None:
-            cmap = self._default_cmap
-        if norm is None:
-            norm = self._default_norm
+    @observe('vert_offset')
+    def update_vert_offset(self, changed):
+        print('vert_offset changed')
+        self._data_stack.set_vert_offset(self.vert_offset)
+        self.replot()
 
-        # stash the parameters not taken care of by the inheritance chain
-        self._cmap = cmap
-        self._norm = norm
-        self._ax = ax
+    @observe('_data_dict')
+    def update_data(self, changed):
+        print('data_dict update triggered')
+        if self._data_stack.data_dict is not self._data_dict:
+            self._data_stack.data_dict = self._data_dict
+        self.replot()
 
-        # clean the figure
-        self._ax.cla()
+    def update_data(self, name, x, y):
+        self._data_dict[name] = (x, y)
+        self.replot()
+
+    @property
+    def axes(self):
+        return self._ax
+
+    @property
+    def figure(self):
+        return self._fig
 
     def replot(self):
-        raise NotImplementedError("This method must be implemented by "
-                                  "daughter classes")
-
-    def update_cmap(self, cmap):
-        """
-        Update the color map used to display the image
-        Parameters
-        ----------
-        cmap : mpl.cm.colors.Colormap
-        """
-        self._cmap = cmap
-
-    def update_norm(self, norm):
-        """
-        Updates the normalization function used for the color mapping
-
-        Parameters
-        ----------
-        norm : mpl.cm.colors.Normalize
-        """
-        self._norm = norm
-
-    def draw(self):
-        self._ax.figure.canvas.draw()
+         self._data_stack.replot()

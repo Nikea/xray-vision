@@ -1,5 +1,5 @@
 # ######################################################################
-# Copyright (c) 2014, Brookhaven Science Associates, Brookhaven        #
+# Copyright (c) 2014-2015, Brookhaven Science Associates, Brookhaven   #
 # National Laboratory. All rights reserved.                            #
 #                                                                      #
 # Redistribution and use in source and binary forms, with or without   #
@@ -32,69 +32,24 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE   #
 # POSSIBILITY OF SUCH DAMAGE.                                          #
 ########################################################################
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
 
-from matplotlib import cm
-
-import logging
-logger = logging.getLogger(__name__)
+from enaml.widgets.api import MainWindow, DockArea, Container
+from enaml.layout.api import HSplitLayout, VSplitLayout
+from bubblegum.enaml_widgets.line_stack import PlotView, PlotControls
 
 
-class AbstractMPLDataView(object):
-    """
-    Class docstring
-    """
-    _default_cmap = 'gray'
-    _default_norm = cm.colors.Normalize(vmin=0, vmax=1)
-
-    def __init__(self, ax, cmap=None, norm=None, *args, **kwargs):
-        """
-        Docstring
-
-        Parameters
-        ----------
-        ax : live mpl.axes.Axes object
-        """
-        # call up the inheritance chain
-        super(AbstractMPLDataView, self).__init__(*args, **kwargs)
-
-        # set some defaults
-        if cmap is None:
-            cmap = self._default_cmap
-        if norm is None:
-            norm = self._default_norm
-
-        # stash the parameters not taken care of by the inheritance chain
-        self._cmap = cmap
-        self._norm = norm
-        self._ax = ax
-
-        # clean the figure
-        self._ax.cla()
-
-    def replot(self):
-        raise NotImplementedError("This method must be implemented by "
-                                  "daughter classes")
-
-    def update_cmap(self, cmap):
-        """
-        Update the color map used to display the image
-        Parameters
-        ----------
-        cmap : mpl.cm.colors.Colormap
-        """
-        self._cmap = cmap
-
-    def update_norm(self, norm):
-        """
-        Updates the normalization function used for the color mapping
-
-        Parameters
-        ----------
-        norm : mpl.cm.colors.Normalize
-        """
-        self._norm = norm
-
-    def draw(self):
-        self._ax.figure.canvas.draw()
+enamldef PlotMain(MainWindow): main:
+    title = "Plot 1D main window"
+    attr model
+    Container:
+        DockArea:
+            layout = HSplitLayout(VSplitLayout('controls'),
+                                  'view')
+            PlotView:
+                name = 'view'
+                title = 'Plot View'
+                figure << main.model.figure
+            PlotControls:
+                model = main.model
+                name = 'controls'
+                title = 'Plot Controls'

@@ -1,5 +1,5 @@
 # ######################################################################
-# Copyright (c) 2014, Brookhaven Science Associates, Brookhaven        #
+# Copyright (c) 2014-2015, Brookhaven Science Associates, Brookhaven   #
 # National Laboratory. All rights reserved.                            #
 #                                                                      #
 # Redistribution and use in source and binary forms, with or without   #
@@ -43,7 +43,6 @@ from . import AbstractMPLDataView
 import logging
 logger = logging.getLogger(__name__)
 
-
 class Stack1DView(AbstractMPLDataView):
     """
     The OneDimStackViewer provides a UI widget for viewing a number of 1-D
@@ -59,21 +58,23 @@ class Stack1DView(AbstractMPLDataView):
     _default_vert_offset = 0
     _default_autoscale = False
 
-    def __init__(self, fig, data_dict, cmap=None, norm=None):
+    def __init__(self, ax, data_dict=None, cmap=None, norm=None):
         """
         __init__ docstring
 
         Parameters
         ----------
-        fig : figure to draw the artists on
-        data_source : dict
+        ax : live mpl.axes.Axes object
+        data_source : dict, optional
             Dictionary formatted like: {data_name: (x, y)}
         cmap : colormap that matplotlib understands
         norm : mpl.colors.Normalize
         """
+        if data_dict is None:
+            data_dict = {}
         self._data_dict = data_dict
         # call the parent constructors
-        super(Stack1DView, self).__init__(fig=fig, cmap=cmap, norm=norm)
+        super(Stack1DView, self).__init__(ax=ax, cmap=cmap, norm=norm)
 
         # set some defaults
         self._horz_offset = self._default_horz_offset
@@ -81,8 +82,7 @@ class Stack1DView(AbstractMPLDataView):
         self._autoscale = self._default_autoscale
 
         # create the matplotlib axes
-        self._ax = self._fig.add_subplot(1, 1, 1)
-        self._ax.set_aspect('equal')
+        self._ax = ax
         # create an ordered dict of lines that has identical keys as the
         # data_dict
         self._lines = {}
@@ -104,6 +104,7 @@ class Stack1DView(AbstractMPLDataView):
         vert_offset : number
             The amount of vertical shift to add to each line in the data stack
         """
+        print('vert_offset updated')
         self._vert_offset = vert_offset
         self.replot()
 
@@ -117,6 +118,7 @@ class Stack1DView(AbstractMPLDataView):
             The amount of horizontal shift to add to each line in the data
             stack
         """
+        print('horz_offset updated')
         self._horz_offset = horz_offset
         self.replot()
 
@@ -126,6 +128,8 @@ class Stack1DView(AbstractMPLDataView):
         Replot the data after modifying a display parameter (e.g.,
         offset or autoscaling) or adding new data
         """
+        if self._ax.figure.canvas is None:
+            return
         rgba = cm.ScalarMappable(self._norm, self._cmap)
         # determine the number of data sets in the data_dict to compute the
         # color for the line
@@ -153,7 +157,7 @@ class Stack1DView(AbstractMPLDataView):
         if self._autoscale:
             self._ax.relim(visible_only=True)
             self._ax.autoscale_view(tight=True)
-        self._fig.canvas.draw()
+        self._ax.figure.canvas.draw()
 
     def set_auto_scale(self, is_autoscaling):
         """
@@ -213,3 +217,7 @@ class Stack1DView(AbstractMPLDataView):
     @property
     def data_dict(self):
         return self._data_dict
+
+    @data_dict.setter
+    def data_dict(self, new_dict):
+        self._data_dict = new_dict
