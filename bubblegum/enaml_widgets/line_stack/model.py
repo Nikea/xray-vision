@@ -1,5 +1,5 @@
 # ######################################################################
-# Copyright (c) 2014, Brookhaven Science Associates, Brookhaven        #
+# Copyright (c) 2014-2015, Brookhaven Science Associates, Brookhaven   #
 # National Laboratory. All rights reserved.                            #
 #                                                                      #
 # Redistribution and use in source and binary forms, with or without   #
@@ -32,61 +32,64 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE   #
 # POSSIBILITY OF SUCH DAMAGE.                                          #
 ########################################################################
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
 
-from .. import QtCore, QtGui
-from ..messenger.mpl.stack_1d import Stack1DMessenger
-from ..messenger.mpl.cross_section_2d import CrossSection2DMessenger
+from atom.api import (Atom, Typed, Str, Dict, observe, Float)
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
 
-import logging
-logger = logging.getLogger(__name__)
-
-class CrossSectionMainWindow(QtGui.QMainWindow):
-    """
-    MainWindow
-    """
-
-    def __init__(self, title=None, parent=None,
-                 data_list=None, key_list=None):
-        QtGui.QMainWindow.__init__(self, parent)
-        if title is None:
-            title = "2D Cross Section"
-        self.setWindowTitle(title)
-        # create view widget, control widget and messenger pass-through
-        self._messenger = CrossSection2DMessenger(data_list=data_list,
-                                                  key_list=key_list)
-
-        self._ctrl_widget = self._messenger._ctrl_widget
-        self._display = self._messenger._display
-
-        # finish the init
-        self._display.setFocus()
-        self.setCentralWidget(self._display)
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea,
-                           self._ctrl_widget)
+from bubblegum.backend.mpl.stack_1d import Stack1DView
 
 
-class Stack1DMainWindow(QtGui.QMainWindow):
-    """
-    MainWindow
-    """
+class Plot1dModel(Atom):
+    _fig = Typed(Figure)
+    _ax = Typed(Axes)
+    _data_stack = Typed(Stack1DView)
+    _data_dict = Dict()
+    _cmap = Str()
+    _norm = Str()
+    horz_offset = Float()
+    vert_offset = Float()
 
-    def __init__(self, title=None, parent=None,
-                 data_dict=None, key_list=None):
-        QtGui.QMainWindow.__init__(self, parent)
-        if title is None:
-            title = "1D Stack"
-        self.setWindowTitle(title)
-        # create view widget, control widget and messenger pass-through
-        self._messenger = Stack1DMessenger(data_dict=data_dict)
+    def __init__(self):
+        with self.suppress_notifications():
+            # plotting initialization
+            self._fig = Figure(figsize=(1,1))
+            self._fig.set_tight_layout(True)
+            self._data_dict = {}
+            self._ax = self._fig.add_subplot(111)
 
-        self._ctrl_widget = self._messenger._ctrl_widget
-        self._display = self._messenger._display
-        dock_widget = QtGui.QDockWidget()
-        dock_widget.setWidget(self._ctrl_widget)
-        # finish the init
-        self._display.setFocus()
-        self.setCentralWidget(self._display)
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea,
-                           dock_widget)
+        self._data_stack = Stack1DView(ax=self._ax,
+                                       data_dict=self._data_dict)
+    @observe('horz_offset')
+    def update_horz_offset(self, changed):
+        print('horz_offset changed')
+        self._data_stack.set_horz_offset(self.horz_offset)
+        self.replot()
+
+    @observe('vert_offset')
+    def update_vert_offset(self, changed):
+        print('vert_offset changed')
+        self._data_stack.set_vert_offset(self.vert_offset)
+        self.replot()
+
+    @observe('_data_dict')
+    def update_data(self, changed):
+        print('data_dict update triggered')
+        if self._data_stack.data_dict is not self._data_dict:
+            self._data_stack.data_dict = self._data_dict
+        self.replot()
+
+    def update_data(self, name, x, y):
+        self._data_dict[name] = (x, y)
+        self.replot()
+
+    @property
+    def axes(self):
+        return self._ax
+
+    @property
+    def figure(self):
+        return self._fig
+
+    def replot(self):
+         self._data_stack.replot()

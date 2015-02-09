@@ -54,13 +54,11 @@ class Stack1DMessenger(AbstractMessenger1D, AbstractMPLMessenger):
     to pass commands down to the gui-independent layer
     """
 
-    def __init__(self, data_list=None, key_list=None, *args, **kwargs):
+    def __init__(self, data_dict=None, *args, **kwargs):
         # call up the inheritance toolchain
         super(Stack1DMessenger, self).__init__(*args, **kwargs)
         # init the view
-        self._view = Stack1DView(fig=self._fig, data_list=data_list,
-                                 key_list=key_list)
-
+        self._view = Stack1DView(ax=self._ax, data_dict=data_dict)
         self._ctrl_widget = make_1D_control_box("Stack 1D")
         # connect signals to slots
         self.connect_sigs_to_slots()
@@ -132,9 +130,9 @@ def make_1D_control_box(title):
     ctl_box = ControlContainer(title)
 
     ctl_box.create_pairspinner('x_shift', init_min=0,
-                               init_max=100, init_step=.1)
+                               init_max=100, init_step=.01)
     ctl_box.create_pairspinner('y_shift', init_min=0,
-                               init_max=100, init_step=.1)
+                               init_max=100, init_step=.01)
 
     # declare a checkbox to turn on/off auto-scaling functionality
     autoscale_box = QtGui.QCheckBox(parent=self)

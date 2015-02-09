@@ -1,5 +1,5 @@
 # ######################################################################
-# Copyright (c) 2014, Brookhaven Science Associates, Brookhaven        #
+# Copyright (c) 2014-2015, Brookhaven Science Associates, Brookhaven   #
 # National Laboratory. All rights reserved.                            #
 #                                                                      #
 # Redistribution and use in source and binary forms, with or without   #
@@ -34,47 +34,47 @@
 ########################################################################
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
+import six
 from matplotlib import cm
 import numpy as np
 
-from .. import QtCore, QtGui
-
 from . import AbstractMPLDataView
-from .. import AbstractDataView1D
 
 import logging
 logger = logging.getLogger(__name__)
 
-
-class Stack1DView(AbstractDataView1D, AbstractMPLDataView):
+class Stack1DView(AbstractMPLDataView):
     """
     The OneDimStackViewer provides a UI widget for viewing a number of 1-D
     data sets with cumulative offsets in the x- and y- directions.  The
     first data set always has an offset of (0, 0).
+
+    Attributes
+    ----------
+    data_source : bubblegum.data.DataSource
     """
 
     _default_horz_offset = 0
     _default_vert_offset = 0
     _default_autoscale = False
 
-    def __init__(self, fig, data_list, key_list, cmap=None, norm=None,
-                 *args, **kwargs):
+    def __init__(self, ax, data_dict=None, cmap=None, norm=None):
         """
         __init__ docstring
 
         Parameters
         ----------
-        fig : figure to draw the artists on
-        data_dict : OrderedDict
-            dictionary of k:v as name : (x,y)
+        ax : live mpl.axes.Axes object
+        data_source : dict, optional
+            Dictionary formatted like: {data_name: (x, y)}
         cmap : colormap that matplotlib understands
         norm : mpl.colors.Normalize
         """
+        if data_dict is None:
+            data_dict = {}
+        self._data_dict = data_dict
         # call the parent constructors
-        super(Stack1DView, self).__init__(fig=fig, data_list=data_list,
-                                          key_list=key_list, cmap=cmap,
-                                          norm=norm, *args, **kwargs)
+        super(Stack1DView, self).__init__(ax=ax, cmap=cmap, norm=norm)
 
         # set some defaults
         self._horz_offset = self._default_horz_offset
@@ -82,24 +82,18 @@ class Stack1DView(AbstractDataView1D, AbstractMPLDataView):
         self._autoscale = self._default_autoscale
 
         # create the matplotlib axes
-        self._ax = self._fig.add_subplot(1, 1, 1)
-        self._ax.set_aspect('equal')
+        self._ax = ax
         # create an ordered dict of lines that has identical keys as the
         # data_dict
-        self._lines_dict = self.default_dict_type()
+        self._lines = {}
 
         # create a local counter
-        counter = 0
         # add the data to the main axes
-        for key in self._data_dict.keys():
-            # get the (x,y) data from the dictionary
-            (x, y) = self._data_dict[key]
+        for idx, (key, (x, y)) in enumerate(six.iteritems(self._data_dict)):
             # plot the (x,y) data with default offsets
-            self._lines_dict[key] = self._ax.plot(
-                x + counter * self._horz_offset,
-                y + counter * self._vert_offset)[0]
-            # increment the counter
-            counter += 1
+            self._lines[key] = self._ax.plot(
+                x + idx * self._horz_offset,
+                y + idx * self._vert_offset)[0]
 
     def set_vert_offset(self, vert_offset):
         """
@@ -110,7 +104,9 @@ class Stack1DView(AbstractDataView1D, AbstractMPLDataView):
         vert_offset : number
             The amount of vertical shift to add to each line in the data stack
         """
+        print('vert_offset updated')
         self._vert_offset = vert_offset
+        self.replot()
 
     def set_horz_offset(self, horz_offset):
         """
@@ -122,7 +118,9 @@ class Stack1DView(AbstractDataView1D, AbstractMPLDataView):
             The amount of horizontal shift to add to each line in the data
             stack
         """
+        print('horz_offset updated')
         self._horz_offset = horz_offset
+        self.replot()
 
     def replot(self):
         """
@@ -130,50 +128,36 @@ class Stack1DView(AbstractDataView1D, AbstractMPLDataView):
         Replot the data after modifying a display parameter (e.g.,
         offset or autoscaling) or adding new data
         """
+        if self._ax.figure.canvas is None:
+            return
         rgba = cm.ScalarMappable(self._norm, self._cmap)
-        # define a local counter
-        counter = 0
         # determine the number of data sets in the data_dict to compute the
         # color for the line
-        num_datasets = len(self._data_dict.keys())
+        num_datasets = len(self._data_dict)
 
-        # remove all keys from _lines_dict that are not in the _data_dict
-        for key in self._lines_dict.keys():
-            if not key in self._data_dict:
-                self._lines_dict[key].remove()
-                continue
-
-        # loop over the keys according to the key_list
-        for key in self._key_list:
-            # get the (x,y) data from the dictionary
-            (x, y) = self._data_dict[key]
+        for idx, (key, (x, y)) in enumerate(six.iteritems(self._data_dict)):
             # compute the new horizontal and vertical offsets
-            new_x = x+counter * self._horz_offset
-            new_y = y+counter * self._vert_offset
+            new_x = x+idx * self._horz_offset
+            new_y = y+idx * self._vert_offset
 
             # compute the color for the line
-            color = rgba.to_rgba(x=(counter / num_datasets))
+            color = rgba.to_rgba(x=(idx / num_datasets))
             try:
                 # set the data in the corresponding line
-                self._lines_dict[key].set_xdata(x + counter * self._horz_offset)
-                self._lines_dict[key].set_ydata(y + counter * self._vert_offset)
+                self._lines[key].set_xdata(x + idx * self._horz_offset)
+                self._lines[key].set_ydata(y + idx * self._vert_offset)
                 # set the color
-                self._lines_dict[key].set_color(color)
+                self._lines[key].set_color(color)
             except KeyError:
                 # create a new line if the key does not exist
-                self._lines_dict[key] = self._ax.plot(new_x,
-                                                      new_y,
-                                                      color=color)[0]
-
-            # increment the counter
-            counter += 1
+                self._lines[key] = self._ax.plot(new_x, new_y, color=color)[0]
 
         # check to see if the axes need to be automatically adjusted to show
         # all the data
         if self._autoscale:
-            min_x, max_x, min_y, max_y = self.find_range()
-            self._ax.set_xlim(min_x, max_x)
-            self._ax.set_ylim(min_y, max_y)
+            self._ax.relim(visible_only=True)
+            self._ax.autoscale_view(tight=True)
+        self._ax.figure.canvas.draw()
 
     def set_auto_scale(self, is_autoscaling):
         """
@@ -185,8 +169,8 @@ class Stack1DView(AbstractDataView1D, AbstractMPLDataView):
             Automatically rescale the axes to show all the data (true)
             or stop automatically rescaling the axes (false)
         """
-        print("autoscaling: {0}".format(is_autoscaling))
         self._autoscale = is_autoscaling
+        self.replot()
 
     def find_range(self):
         """
@@ -221,15 +205,19 @@ class Stack1DView(AbstractDataView1D, AbstractMPLDataView):
         @Override
         Override abstract base class to also clear the ordered dict mpl lines
         """
-        # clear all data from the data_dict
-        self._data_dict.clear()
         # clear all lines from the lines_dict
-        self._lines_dict.clear()
+        self._lines.clear()
         # clear the artists
         self._ax.cla()
-        # clear the list of keys
-        self._key_list[:] = []
+        # remove the data source
+        self._data_dict = None
         # call the replot function
         self.replot()
-        # redraw the canvas
-        self._fig.canvas.draw()
+
+    @property
+    def data_dict(self):
+        return self._data_dict
+
+    @data_dict.setter
+    def data_dict(self, new_dict):
+        self._data_dict = new_dict

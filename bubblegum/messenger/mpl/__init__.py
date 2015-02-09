@@ -58,9 +58,9 @@ class AbstractMPLMessenger(AbstractMessenger):
         super(AbstractMPLMessenger, self).__init__(*args, **kwargs)
         # init a display
         self._display = MPLDisplayWidget()
-        self._fig = self._display._fig
+        self._ax = self._display._ax
         # set a default view
-        self._view = AbstractMPLDataView(fig=self._fig)
+        self._view = AbstractMPLDataView(ax=self._ax)
 
     #@QtCore.Slot(colors.Normalize)
     def sl_update_norm(self, new_norm):
@@ -87,7 +87,7 @@ class AbstractMPLMessenger(AbstractMessenger):
     @QtCore.Slot()
     def sl_update_view(self):
         self._view.replot()
-        self._view._fig.canvas.draw()
+        self._view._ax.figure.canvas.draw()
 
 
 class MPLDisplayWidget(AbstractDisplayWidget):
@@ -102,6 +102,7 @@ class MPLDisplayWidget(AbstractDisplayWidget):
 
         # create a figure to display the mpl axes
         self._fig = Figure(figsize=(self.default_height, self.default_width))
+        self._ax = self._fig.add_subplot(111)
 
         canvas = FigureCanvas(self._fig)
         FigureCanvas.setSizePolicy(canvas,

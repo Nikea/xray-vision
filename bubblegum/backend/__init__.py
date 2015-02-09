@@ -34,8 +34,6 @@
 ########################################################################
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from .. import QtCore, QtGui
-
 from collections import defaultdict
 
 from six.moves import zip
@@ -81,7 +79,7 @@ class AbstractDataView(object):
                 data_dict[k] = v
 
         # stash the dict and keys
-        self._data_dict = data_dict
+        self._data_source = data_dict
         self._key_list = key_list
 
     def replot(self):
@@ -96,7 +94,7 @@ class AbstractDataView(object):
         """
         Clear all data
         """
-        self._data_dict.clear()
+        self._data_source.clear()
         self._key_list[:] = []
 
     def remove_data(self, lbl_list):
@@ -112,7 +110,7 @@ class AbstractDataView(object):
         """
         for lbl in lbl_list:
             try:
-                del self._data_dict[lbl]
+                del self._data_source[lbl]
                 self._key_list.remove(lbl)
             except KeyError:
                 # do nothing
@@ -147,7 +145,7 @@ class AbstractDataView1D(AbstractDataView):
         if position is None:
             position = len(self._key_list)
         for counter, (lbl, x, y) in enumerate(zip(lbl_list, x_list, y_list)):
-            self._data_dict[lbl] = (x, y)
+            self._data_source[lbl] = (x, y)
             self._key_list.insert(position+counter, lbl)
 
     def append_data(self, lbl_list, x_list, y_list):
@@ -175,11 +173,11 @@ class AbstractDataView1D(AbstractDataView):
         y_to_add = []
         for (lbl, x, y) in zip(lbl_list, x_list, y_list):
             lbl = str(lbl)
-            if lbl in self._data_dict:
+            if lbl in self._data_source:
                 # get the current vectors at 'lbl'
-                (prev_x, prev_y) = self._data_dict[lbl]
+                (prev_x, prev_y) = self._data_source[lbl]
                 # set the concatenated data to 'lbl'
-                self._data_dict[lbl] = (np.concatenate((prev_x, x)),
+                self._data_source[lbl] = (np.concatenate((prev_x, x)),
                                         np.concatenate((prev_y, y)))
             else:
                 # key doesn't exist, append the data to lists
@@ -239,7 +237,7 @@ class AbstractDataView2D(AbstractDataView):
         # loop over the data passed in
         for (lbl, xy, corners) in zip(lbl_list, xy_list, corners_list):
             # stash the data
-            self._data_dict[lbl] = xy
+            self._data_source[lbl] = xy
             # stash the corners
             self._corners_dict[lbl] = corners
             # insert the key into the desired position in the keys list
@@ -275,14 +273,14 @@ class AbstractDataView2D(AbstractDataView):
             try:
                 # set the concatenated data to 'lbl'
                 if end:
-                    self._data_dict[lbl] = np.r_[str(ax),
-                                                 self._data_dict[lbl],
+                    self._data_source[lbl] = np.r_[str(ax),
+                                                 self._data_source[lbl],
                                                  xy]
                     # TODO: Need to update the corners_list also...
                 else:
-                    self._data_dict[lbl] = np.r_[str(ax),
+                    self._data_source[lbl] = np.r_[str(ax),
                                                  xy,
-                                                 self._data_dict[lbl]]
+                                                 self._data_source[lbl]]
                     # TODO: Need to update the corners_list also...
             except KeyError:
                 # key doesn't exist, add data to a new entry called 'lbl'

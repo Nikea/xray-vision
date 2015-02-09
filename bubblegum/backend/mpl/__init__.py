@@ -36,9 +36,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from matplotlib import cm
-from .. import QtCore, QtGui
-
-from ...backend import AbstractDataView
 
 import logging
 logger = logging.getLogger(__name__)
@@ -51,13 +48,13 @@ class AbstractMPLDataView(object):
     _default_cmap = 'gray'
     _default_norm = cm.colors.Normalize(vmin=0, vmax=1)
 
-    def __init__(self, fig, cmap=None, norm=None, *args, **kwargs):
+    def __init__(self, ax, cmap=None, norm=None, *args, **kwargs):
         """
         Docstring
 
         Parameters
         ----------
-        fig : mpl.Figure
+        ax : live mpl.axes.Axes object
         """
         # call up the inheritance chain
         super(AbstractMPLDataView, self).__init__(*args, **kwargs)
@@ -71,10 +68,10 @@ class AbstractMPLDataView(object):
         # stash the parameters not taken care of by the inheritance chain
         self._cmap = cmap
         self._norm = norm
-        self._fig = fig
+        self._ax = ax
 
         # clean the figure
-        self._fig.clf()
+        self._ax.cla()
 
     def replot(self):
         raise NotImplementedError("This method must be implemented by "
@@ -100,4 +97,4 @@ class AbstractMPLDataView(object):
         self._norm = norm
 
     def draw(self):
-        self._fig.canvas.draw()
+        self._ax.figure.canvas.draw()

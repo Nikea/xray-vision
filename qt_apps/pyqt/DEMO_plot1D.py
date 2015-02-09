@@ -85,17 +85,14 @@ class demo_1d(QtGui.QMainWindow):
         # Generate data
         num_sets = 100
         x_data, y_data = data_gen(num_sets=num_sets, phase_shift=0,
-                        horz_shift=0, vert_shift=0)
-        data_list = []
-        key_list = []
+                                  horz_shift=0, vert_shift=0)
+        data_dict = {}
         for (lbl, x, y) in zip(range(num_sets), x_data, y_data):
-            data_list.append((x, y))
-            key_list.append(lbl)
+            data_dict[lbl] = (x, y)
 
         # init the 1d stack main window
         self.setWindowTitle('OneDimStack Example')
-        self._main_window = Stack1DMainWindow(data_list=data_list,
-                                       key_list=key_list)
+        self._main_window = Stack1DMainWindow(data_dict=data_dict)
 
         self._main_window.setFocus()
         self.setCentralWidget(self._main_window)
