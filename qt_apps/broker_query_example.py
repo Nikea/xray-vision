@@ -3,10 +3,10 @@ from __future__ import (absolute_import, division, print_function,
 import six, sys, datetime
 import sip
 sip.setapi('QDateTime', 2)
-from bubblegum import QtCore, QtGui
-from bubblegum.qt_widgets.displaydict import RecursiveTreeWidget
+from xray_vision import QtCore, QtGui
+from xray_vision.qt_widgets.displaydict import RecursiveTreeWidget
 from collections import defaultdict
-from bubblegum.qt_widgets.query_widget import QueryMainWindow
+from xray_vision.qt_widgets.query_widget import QueryMainWindow
 import logging
 logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     handler.setLevel('INFO')
     logger.addHandler(handler)
     commands.logger.addHandler(handler)
-    logging.getLogger("bubblegum.qt_widgets.query_widget").addHandler(handler)
+    logging.getLogger("xray_vision.qt_widgets.query_widget").addHandler(handler)
     app = QtGui.QApplication(sys.argv)
 
     test_dict = commands.search_keys_dict

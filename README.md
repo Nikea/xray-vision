@@ -1,4 +1,4 @@
-bubblegum
-========
+xray-vision
+===========
 
-Collection of prototype gui code for visualization and widgets. As it's gui code, things are held together with...
+Domain specific plotting and GUI widgets for X-ray science

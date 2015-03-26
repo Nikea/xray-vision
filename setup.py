@@ -58,13 +58,13 @@ else:
     FULLVERSION += QUALIFIER
 
 setup(
-    name='bubblegum',
+    name='xray-vision',
     version=FULLVERSION,
     author='Brookhaven National Lab',
-    packages=['bubblegum',
-              'bubblegum.qt_widgets',
-              'bubblegum.messenger', 'bubblegum.messenger.mpl',
-              'bubblegum.backend', 'bubblegum.backend.mpl',
-              'bubblegum.xrf', 'bubblegum.xrf.model',
-              'bubblegum.xrf.view'],
+    packages=['xray_vision',
+              'xray_vision.qt_widgets',
+              'xray_vision.messenger', 'xray_vision.messenger.mpl',
+              'xray_vision.backend', 'xray_vision.backend.mpl',
+              'xray_vision.xrf', 'xray_vision.xrf.model',
+              'xray_vision.xrf.view'],
 )
