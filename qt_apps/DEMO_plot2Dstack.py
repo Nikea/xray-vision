@@ -41,12 +41,12 @@ from __future__ import (absolute_import, division, print_function,
 
 import sys
 
-from bubblegum import QtGui, QtCore
+from xray_vision import QtGui, QtCore
 import numpy as np
 
-from bubblegum.messenger.mpl.cross_section_2d import CrossSection2DMessenger
+from xray_vision.messenger.mpl.cross_section_2d import CrossSection2DMessenger
 
-from bubblegum.qt_widgets import CrossSectionMainWindow
+from xray_vision.qt_widgets import CrossSectionMainWindow
 
 import logging
 logger = logging.getLogger(__name__)

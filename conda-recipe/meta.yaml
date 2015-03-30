@@ -1,5 +1,5 @@
 package:
-  name: bubblegum
+  name: xray-vision
   version: {{ environ['GIT_DESCRIBE_TAG'] }}.post{{ environ['GIT_DESCRIBE_NUMBER'] }}
 
 source:
@@ -29,14 +29,14 @@ test:
     - nose
 
   imports:
-    - bubblegum
-    - bubblegum.qt_widgets
-    - bubblegum.messenger
-    - bubblegum.messenger.mpl
-    - bubblegum.backend
-    - bubblegum.backend.mpl
+    - xray_vision
+    - xray_vision.qt_widgets
+    - xray_vision.messenger
+    - xray_vision.messenger.mpl
+    - xray_vision.backend
+    - xray_vision.backend.mpl
 
 
 about:
-  home: https://github.com/Nikea/bubblegum
+  home: https://github.com/Nikea/xray-vision
   license: 3-Clause BSD

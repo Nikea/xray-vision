@@ -44,9 +44,9 @@ import sys
 import numpy as np
 from collections import OrderedDict
 
-from bubblegum import QtCore, QtGui
-from bubblegum.qt_widgets import Stack1DMainWindow
-from bubblegum.messenger.mpl.stack_1d import Stack1DMessenger
+from xray_vision import QtCore, QtGui
+from xray_vision.qt_widgets import Stack1DMainWindow
+from xray_vision.messenger.mpl.stack_1d import Stack1DMessenger
 
 import logging
 logger = logging.getLogger(__name__)
