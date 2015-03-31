@@ -34,6 +34,7 @@
 ########################################################################
 # imports to smooth over differences between PyQt4, PyQt5, PyQt4.1 and PySides
 
+# import enaml.qt
 import sip
 sip.setapi('QString', 2)
 import matplotlib
