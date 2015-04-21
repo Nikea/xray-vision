@@ -122,7 +122,7 @@ def manual_mask_demo(image):
 
 
 if __name__  == "__main__":
-        from skimage import data
-        image = data.coins()
-
-	manual_mask_demo(image)
+        data = "/Volumes/Data/prog/one_time_correlation/ipython_notebooks/100_500_NIPA_GEL.npy"
+        imgs = np.load(data)
+        img = imgs[0]
+	manual_mask_demo(img)
