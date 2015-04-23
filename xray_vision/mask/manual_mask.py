@@ -2,6 +2,9 @@
 # Copyright (c) 2014, Brookhaven Science Associates, Brookhaven        #
 # National Laboratory. All rights reserved.                            #
 #                                                                      #
+# Developed at the NSLS-II, Brookhaven National Laboratory             #
+# Developed by Sameera K. Abeykoon, April 2014                         #
+#                                                                      #
 # Redistribution and use in source and binary forms, with or without   #
 # modification, are permitted provided that the following conditions   #
 # are met:                                                             #
@@ -52,7 +55,8 @@ from matplotlib import path
 import matplotlib.pyplot as plt
 import numpy as np
 
-"This module will allow to draw a manual mask for an image"
+"""This module will allow to draw a manual mask or region of interests(roi's)
+for an image"""
 
 class ManualMask(object):
     def __init__(self, ax, image):
@@ -60,10 +64,11 @@ class ManualMask(object):
         self.canvas = ax.figure.canvas
         self.data = image
         self.img_shape = image.shape
-        self.mask = np.zeros(image.shape[0]*image.shape[1], dtype=bool)
-        y, x = np.mgrid[:image.shape[0], :image.shape[1]]
-        self.points = np.transpose((x.ravel(), y.ravel()))
-        self.canvas.mpl_connect('key_press_event', self.key_press_callback)
+        #self.manual_mask_demo()
+        #self.mask = np.zeros(image.shape[0]*image.shape[1], dtype=bool)
+        #y, x = np.mgrid[:image.shape[0], :image.shape[1]]
+        #self.points = np.transpose((x.ravel(), y.ravel()))
+        #self.canvas.mpl_connect('key_press_event', self.key_press_callback)
 
 
     def on_press(self, event):
@@ -88,16 +93,19 @@ class ManualMask(object):
         self.mask = self.mask | p.contains_points(self.points)
 
 
+    # TODO
     def reset(self, event):
-	    #TODO
-         self.patch.remove()
+	     #self.patch.remove()
+         pass
 
 
     def key_press_callback(self, event):
         'whenever a key is pressed'
-        #"press 'i' to start drawing a mask(s) on the canvas"
-        #"press 'f' to stop drawing and create a text file containing
-        #  the mask array"
+        #  press 'i' to start drawing a mask(s)/roi(s) on the canvas"
+        #  press 'r' to remove the last roi's selected
+        #  press 'f' to stop drawing and create a numpy array(shape img_shape)
+        #  of the containing mask(s)/roi(s)
+        #  the mask array
         if not event.inaxes:
             return
         if event.key=='i':
@@ -107,22 +115,19 @@ class ManualMask(object):
             self.rcid = self.canvas.mpl_connect('button_press_event',
                                                 self.reset)
         if event.key=='f':
-            np.savetxt("mask_data.txt", self.mask.reshape(self.img_shape))
             np.save("mask.npy", self.mask.reshape(self.img_shape))
             plt.imshow(self.mask.reshape(self.img_shape))
-            plt.show()
 
 
-def manual_mask_demo(image):
-    ax = plt.subplot(111)
-    ax.imshow(image)
-    plt.title("Press 'i'- start drawing a mask , Press 'f'- finish masking ")
-    mc = ManualMask(ax, image)
-    plt.show()
+    def manual_mask_demo(self):
+        self.axes = plt.subplot(111)
+        self.axes.imshow(self.data)
+        plt.title("Press 'i'- start drawing a mask , Press 'f'- finish masking ")
 
 
 if __name__  == "__main__":
-        data = "/Volumes/Data/prog/one_time_correlation/ipython_notebooks/100_500_NIPA_GEL.npy"
-        imgs = np.load(data)
-        img = imgs[0]
-	manual_mask_demo(img)
+    from skimage import data
+    image = data.coins()
+    f, ax = plt.subplots()
+    mc = ManualMask(ax, image)
+    #mc.manual_mask_demo()
