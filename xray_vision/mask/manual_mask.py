@@ -64,11 +64,11 @@ class ManualMask(object):
         self.canvas = ax.figure.canvas
         self.data = image
         self.img_shape = image.shape
-        #self.manual_mask_demo()
-        #self.mask = np.zeros(image.shape[0]*image.shape[1], dtype=bool)
-        #y, x = np.mgrid[:image.shape[0], :image.shape[1]]
-        #self.points = np.transpose((x.ravel(), y.ravel()))
-        #self.canvas.mpl_connect('key_press_event', self.key_press_callback)
+        self.manual_mask_demo()
+        self.mask = np.zeros(image.shape[0]*image.shape[1], dtype=bool)
+        y, x = np.mgrid[:image.shape[0], :image.shape[1]]
+        self.points = np.transpose((x.ravel(), y.ravel()))
+        self.canvas.mpl_connect('key_press_event', self.key_press_callback)
 
 
     def on_press(self, event):
@@ -130,4 +130,4 @@ if __name__  == "__main__":
     image = data.coins()
     f, ax = plt.subplots()
     mc = ManualMask(ax, image)
-    #mc.manual_mask_demo()
+    plt.show()
