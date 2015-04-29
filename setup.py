@@ -67,5 +67,5 @@ setup(
               'xray_vision.backend', 'xray_vision.backend.mpl',
               'xray_vision.xrf', 'xray_vision.xrf.model',
               'xray_vision.xrf.view',
-              'xray_vision.mask'],
+              'xray_vision.mask', 'xray_vision.utils'],
 )
