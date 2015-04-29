@@ -44,20 +44,72 @@ from __future__ import (absolute_import, division, print_function,
 import six
 import logging
 
+import numpy as np
+from scipy import ndimage
 from matplotlib.widgets import Lasso
 from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib import path
+from ..utils.mpl_helpers import ensure_ax_init
 
-import numpy as np
 logger = logging.getLogger(__name__)
 
 
 class ManualMask(object):
-    def __init__(self, ax, image):
+    @ensure_ax_init
+    def __init__(self, ax, image, cmap='gray'):
+        """
+        Use a GUI to specify region(s) of interest.
+
+        The user can draw as many regions as desired and, at any point
+        during the process, access the results programatically using
+        the attributes below.
+
+        Note the following keyboard shortcuts:
+        r - remove (cut holes)
+        a - add (resume normal drawing)
+        u - undo
+
+        Parameters
+        ----------
+        ax : Axes, optional
+        image : array
+            backdrop shown under drawing
+            This is used for visual purposes and to set the shape of the
+            drawing canvas. Its content does not affect the output.
+        cmap : str, optional
+            'gray' by default
+
+        Attributes
+        ----------
+        mask : boolean array
+            all "postive" regions are True, negative False
+        label_array : integer array
+            each contiguous region is labeled with an integer
+        label_by_stroke : integer array
+            Each region drawn by the user is labeled with an integer.
+            Even regions that are contiguous or overlapping are given
+            unique labels if they were drawn separately. Where regions
+            overlap, the last-drawn region takes precedence.
+        sign : boolean
+            While True, all drawings add to the region(s) of interest.
+            While False, all drawing cuts holes in any regions of interest.
+
+        Methods
+        -------
+        undo()
+            Undo the last-drawn region.
+
+        Example
+        -------
+        >>> m = ManualMask(my_img)
+        >>> boolean_array = m.mask  # inside ROI(s) is True, outside False
+        >>> label_array = m.label_array  # a unique number for each ROI
+        """
         cmap = ListedColormap([(1, 1, 1, 0), 'b'])
         norm = BoundaryNorm([0, 0.5, 1], cmap.N, clip=True)
 
         self._cid = None
+
 
         self.ax = ax
         self._base_format_fuc = ax.format_coord
@@ -163,14 +215,7 @@ class ManualMask(object):
         self._active = ''
         self.canvas.toolbar.set_message('')
 
-if __name__ == "__main__":
-    from skimage import data
-    import matplotlib.pyplot as plt
-
-    image = data.coins()
-
-    f, ax = plt.subplots()
-    f.canvas.mpl_disconnect(f.canvas.manager.key_press_handler_id)
-    f.canvas.manager.key_press_handler_id = None
-    mc = ManualMask(ax, image)
-    plt.show()
+    @property
+    def label_array(self):
+        arr, num = ndimage.measurements.label(self.mask)
+        return arr
