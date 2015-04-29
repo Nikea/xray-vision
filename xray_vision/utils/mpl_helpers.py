@@ -15,7 +15,7 @@ def ensure_ax(func):
         return func(ax, *args, **kwargs)
     return inner
 
-def ensure_ax_init(func):
+def ensure_ax_meth(func):
     s = None
     @wraps(func)
     def inner(*args, **kwargs):
