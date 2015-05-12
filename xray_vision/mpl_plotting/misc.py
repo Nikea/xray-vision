@@ -129,7 +129,7 @@ def show_label_array(ax, label_array, cmap=None, **kwargs):
     return im
 
 
-def binary_state_lines(ax, chrom_data, xmin=0, xmax=120,
+def binary_state_lines(ax, data, xmin, xmax,
                        delta_y=3,
                        off_color="#1C2F4D",
                        on_color="#FA9B00",
@@ -142,12 +142,15 @@ def binary_state_lines(ax, chrom_data, xmin=0, xmax=120,
     ax : Axes
         The axes to draw stuff to
 
-    chrom_data : OrderedDict
-        The input data as a dict, keyed on the data label. Each value is
-         with a list of pairs
-        of where the data is 'on'.  Data is plotted top-down
+    data : OrderedDict
+        The data as an ordered dict. The keys will be used as ytick labels
+        keyed on the data label.  The values are a list of edge pairs where
+        the value is 'high'; ex ``data[k] = [(1, 2), (3, 5.5)]`` is 'high' in
+        the ranges 1 to 2 and 3 to 5.5 and 'low' everywhere else.
 
-    xmin, xmax : float, optional
+        The lines are drawn in order from the top down.
+
+    xmin, xmax : float
         The minimum and maximum limits for the x values
 
     delta_y : float, optional
@@ -179,12 +182,12 @@ def binary_state_lines(ax, chrom_data, xmin=0, xmax=120,
     # dictionary to hold the returned artists
     ret = dict()
     # loop over the input data draw each collection
-    for label, data in chrom_data.items():
+    for label, d in data.items():
         # increment the y offset
         y_val += delta_y
         # turn the high windows on to alternating
         # high/low regions
-        x = np.asarray(data).ravel()
+        x = np.asarray(d).ravel()
         # assign the high/low state to each one
         state = np.mod(1 + np.arange(len(x)), 2)
         # deal with boundary conditions to be off
@@ -208,8 +211,8 @@ def binary_state_lines(ax, chrom_data, xmin=0, xmax=120,
     # turn off x-ticks
     ax.xaxis.set_major_locator(NullLocator())
     # make the y-ticks be labeled as per the input
-    ax.yaxis.set_ticks((1 + np.arange(len(chrom_data))) * delta_y)
-    ax.yaxis.set_ticklabels(list(chrom_data.keys()))
+    ax.yaxis.set_ticks((1 + np.arange(len(data))) * delta_y)
+    ax.yaxis.set_ticklabels(list(data.keys()))
     # invert so that the first data is at the top
     ax.invert_yaxis()
     # turn off the frame and patch

@@ -10,5 +10,5 @@ for j in range(21):
     syn_data[key] = np.cumsum(np.random.randint(1, 10, 20)).reshape(-1, 2)
 
 fig, ax = plt.subplots(tight_layout=True)
-ret = xrv_plt.binary_state_lines(ax, syn_data, xmax=120)
+ret = xrv_plt.binary_state_lines(ax, syn_data, xmin=0, xmax=120)
 plt.show()
