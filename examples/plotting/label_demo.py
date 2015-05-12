@@ -1,7 +1,6 @@
 import matplotlib
-matplotlib.use('Agg')
 from skimage import draw as skd
-import matplotlib.pypolt as plt
+import matplotlib.pyplot as plt
 import xray_vision.mpl_plotting as xrv_plt
 import numpy as np
 
