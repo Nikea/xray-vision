@@ -131,8 +131,8 @@ def show_label_array(ax, label_array, cmap=None, **kwargs):
 
 def binary_state_lines(ax, data, xmin, xmax,
                        delta_y=3,
-                       off_color="#1C2F4D",
-                       on_color="#FA9B00",
+                       off_color=None,
+                       on_color=None,
                        lc_kwargs=None):
     """
     Draw series of lines indicating the state of (many) indicators.
@@ -157,7 +157,8 @@ def binary_state_lines(ax, data, xmin, xmax,
         The spacing between lines
 
     off_color, on_color : color, optional
-        The colors to use for the the on/off state
+        The colors to use for the the off/on state.
+        Default to "#1C2F4D" (blueish) and "#FA9B00" (yellowish) respectively
 
     lc_kwargs : dict, optional
        kwargs to pass through the the LineCollection init method.  If not
@@ -173,6 +174,11 @@ def binary_state_lines(ax, data, xmin, xmax,
         lc_kwargs = dict()
     if 'lw' not in lc_kwargs:
         lc_kwargs['lw'] = 10
+
+    if off_color is None:
+        off_color = "#1C2F4D"
+    if on_color is None:
+        on_color = "#FA9B00"
 
     # base offset
     y_val = 0
@@ -240,8 +246,8 @@ def _draw_segments(ax, x, y, state, cmap, norm, lc_kwargs):
     norm : matplotlib.ticker.Norm
        The norm to use with the color map
 
-    lw : float, optional
-       The width of the lines
+    lc_kwargs : dict
+       kwargs to pass through to LineCollection
     """
 
     points = np.array([x, y]).T.reshape(-1, 1, 2)
