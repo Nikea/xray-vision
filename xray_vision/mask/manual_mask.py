@@ -61,6 +61,13 @@ class ManualMask(object):
         self._cid = None
 
         self.ax = ax
+        self._base_format_fuc = ax.format_coord
+
+        def wrapped_format_coord(x, y):
+            return "{} {}".format(self._active, self._base_format_fuc(x, y))
+
+        self.ax.format_coord = wrapped_format_coord
+
         self.canvas = ax.figure.canvas
         self.img_shape = image.shape
         self.data = image
