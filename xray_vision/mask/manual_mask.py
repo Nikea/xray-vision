@@ -64,11 +64,11 @@ class ManualMask(object):
         self.canvas = ax.figure.canvas
         self.img_shape = image.shape
         self.data = image
-        self.mask = np.zeros(np.prod(self.img_shape), dtype=bool)
+        self.mask = np.zeros(self.img_shape, dtype=bool)
 
         self.base_image = ax.imshow(self.data, zorder=1, cmap='gray',
                                     interpolation='nearest')
-        self.overlay_image = ax.imshow(self.mask.reshape(*self.img_shape),
+        self.overlay_image = ax.imshow(self.mask,
                                        zorder=2,
                                        alpha=.66,
                                        cmap=cmap,
@@ -94,9 +94,10 @@ class ManualMask(object):
         p = path.Path(verts)
 
         self.canvas.widgetlock.release(self.lasso)
+        new_mask = p.contains_points(self.points).reshape(*self.img_shape)
+        self.mask = self.mask | new_mask
 
-        self.mask = self.mask | p.contains_points(self.points)
-        self.overlay_image.set_data(self.mask.reshape(*self.img_shape))
+        self.overlay_image.set_data(self.mask)
 
         self.canvas.draw_idle()
 
