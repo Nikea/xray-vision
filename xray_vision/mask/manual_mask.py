@@ -81,12 +81,13 @@ class ManualMask(object):
                                        cmap=cmap,
                                        norm=norm,
                                        interpolation='nearest')
-        ax.set_title("Press 'i'- start drawing a mask, 'q'- to finish")
+        ax.set_title("'i': lasso, 't': pixel flip, "
+                     "'r': reset mask, 'q': no tools ")
 
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
         self.points = np.transpose((x.ravel(), y.ravel()))
         self.canvas.mpl_connect('key_press_event', self.key_press_callback)
-        self._active = 'none'
+        self._active = ''
 
     def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
@@ -131,11 +132,13 @@ class ManualMask(object):
         'whenever a key is pressed'
         if not event.inaxes:
             return
-        if self._cid is None and event.key == 'i':
+        if event.key == 'i':
             self.enable_lasso()
+        elif event.key == 't':
+            self.enable_pixel_flip()
         elif event.key == 'r':
             self.reset()
-        elif self._cid is not None and event.key == 'q':
+        elif event.key == 'q':
             self.disable_tools()
 
     def enable_lasso(self):
