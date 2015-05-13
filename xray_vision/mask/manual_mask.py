@@ -60,7 +60,7 @@ class ManualMask(object):
 
         self._cid = None
 
-        self.axes = ax
+        self.ax = ax
         self.canvas = ax.figure.canvas
         self.img_shape = image.shape
         self.data = image
