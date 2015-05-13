@@ -48,7 +48,6 @@ from matplotlib.widgets import Lasso
 from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib import path
 
-import matplotlib.pyplot as plt
 import numpy as np
 logger = logging.getLogger(__name__)
 
@@ -166,6 +165,8 @@ class ManualMask(object):
 
 if __name__ == "__main__":
     from skimage import data
+    import matplotlib.pyplot as plt
+
     image = data.coins()
     f, ax = plt.subplots()
     mc = ManualMask(ax, image)
