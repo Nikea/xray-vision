@@ -45,7 +45,7 @@ import six
 import logging
 
 from matplotlib.widgets import Lasso
-from matplotlib.patches import PathPatch
+from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib import path
 
 import matplotlib.pyplot as plt
@@ -55,12 +55,27 @@ logger = logging.getLogger(__name__)
 
 class ManualMask(object):
     def __init__(self, ax, image):
+        cmap = ListedColormap([(1, 1, 1, 0), 'b'])
+        norm = BoundaryNorm([0, 0.5, 1], cmap.N, clip=True)
+
+        self._cid = None
+
         self.axes = ax
         self.canvas = ax.figure.canvas
-        self.data = image
         self.img_shape = image.shape
-        self.manual_mask_demo()
-        self.mask = np.zeros(image.shape[0]*image.shape[1], dtype=bool)
+        self.data = image
+        self.mask = np.zeros(np.prod(self.img_shape), dtype=bool)
+
+        self.base_image = ax.imshow(self.data, zorder=1, cmap='gray',
+                                    interpolation='nearest')
+        self.overlay_image = ax.imshow(self.mask.reshape(*self.img_shape),
+                                       zorder=2,
+                                       alpha=.66,
+                                       cmap=cmap,
+                                       norm=norm,
+                                       interpolation='nearest')
+        ax.set_title("Press 'i'- start drawing a mask, 'q'- to finish")
+
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
         self.points = np.transpose((x.ravel(), y.ravel()))
         self.canvas.mpl_connect('key_press_event', self.key_press_callback)
@@ -77,17 +92,18 @@ class ManualMask(object):
 
     def call_back(self, verts):
         p = path.Path(verts)
-        self.patch = PathPatch(p, facecolor='g')
-        plt.gca().add_patch(self.patch)
 
-        self.canvas.draw_idle()
         self.canvas.widgetlock.release(self.lasso)
 
         self.mask = self.mask | p.contains_points(self.points)
+        self.overlay_image.set_data(self.mask.reshape(*self.img_shape))
+
+        self.canvas.draw_idle()
 
     # TODO
     def reset(self, event):
-        # self.patch.remove()
+        self.mask = np.zeros(np.prod(self.img_shape), dtype=bool)
+
         pass
 
     def key_press_callback(self, event):
@@ -99,20 +115,19 @@ class ManualMask(object):
         #  the mask array
         if not event.inaxes:
             return
-        if event.key == 'i':
-            self.cid = self.canvas.mpl_connect('button_press_event',
-                                               self.on_press)
-        if event.key == 'r':
+        if self._cid is None and event.key == 'i':
+            self._cid = self.canvas.mpl_connect('button_press_event',
+                                                self.on_press)
+            return
+
+        elif event.key == 'r':
             self.rcid = self.canvas.mpl_connect('button_press_event',
                                                 self.reset)
-        if event.key == 'f':
-            np.save("mask.npy", self.mask.reshape(self.img_shape))
-            plt.imshow(self.mask.reshape(self.img_shape))
-
-    def manual_mask_demo(self):
-        self.axes = plt.subplot(111)
-        self.axes.imshow(self.data)
-        plt.title("Press 'i'- start drawing a mask, Press 'f'- finish masking")
+            return
+        elif self._cid is not None and event.key == 'q':
+            self.canvas.mpl_disconnect(self._cid)
+            self._cid = None
+            return
 
 
 if __name__ == "__main__":
