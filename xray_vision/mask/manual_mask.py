@@ -150,7 +150,9 @@ class ManualMask(object):
     def disable_tools(self):
         if self._cid is not None:
             self.canvas.mpl_disconnect(self._cid)
-        self._active = 'none'
+            self._cid = None
+        self._active = ''
+        self.canvas.toolbar.set_message('')
 
 if __name__ == "__main__":
     from skimage import data
