@@ -35,18 +35,14 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE   #
 # POSSIBILITY OF SUCH DAMAGE.                                          #
 ########################################################################
+"""This module will allow to draw a manual mask or region of interests(roi's)
+for an image"""
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import six
-import sys
 import logging
-
-logger = logging.getLogger(__name__)
-
-import matplotlib
-matplotlib.use('TkAgg')
 
 from matplotlib.widgets import Lasso
 from matplotlib.patches import PathPatch
@@ -54,9 +50,8 @@ from matplotlib import path
 
 import matplotlib.pyplot as plt
 import numpy as np
+logger = logging.getLogger(__name__)
 
-"""This module will allow to draw a manual mask or region of interests(roi's)
-for an image"""
 
 class ManualMask(object):
     def __init__(self, ax, image):
@@ -70,17 +65,15 @@ class ManualMask(object):
         self.points = np.transpose((x.ravel(), y.ravel()))
         self.canvas.mpl_connect('key_press_event', self.key_press_callback)
 
-
     def on_press(self, event):
         if self.canvas.widgetlock.locked():
-           return
+            return
         if event.inaxes is None:
-           return
+            return
         self.lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
                            self.call_back)
         # acquire a lock on the widget drawing
         self.canvas.widgetlock(self.lasso)
-
 
     def call_back(self, verts):
         p = path.Path(verts)
@@ -92,12 +85,10 @@ class ManualMask(object):
 
         self.mask = self.mask | p.contains_points(self.points)
 
-
     # TODO
     def reset(self, event):
-	     #self.patch.remove()
-         pass
-
+        # self.patch.remove()
+        pass
 
     def key_press_callback(self, event):
         'whenever a key is pressed'
@@ -108,24 +99,23 @@ class ManualMask(object):
         #  the mask array
         if not event.inaxes:
             return
-        if event.key=='i':
+        if event.key == 'i':
             self.cid = self.canvas.mpl_connect('button_press_event',
                                                self.on_press)
-        if event.key=='r':
+        if event.key == 'r':
             self.rcid = self.canvas.mpl_connect('button_press_event',
                                                 self.reset)
-        if event.key=='f':
+        if event.key == 'f':
             np.save("mask.npy", self.mask.reshape(self.img_shape))
             plt.imshow(self.mask.reshape(self.img_shape))
-
 
     def manual_mask_demo(self):
         self.axes = plt.subplot(111)
         self.axes.imshow(self.data)
-        plt.title("Press 'i'- start drawing a mask , Press 'f'- finish masking ")
+        plt.title("Press 'i'- start drawing a mask, Press 'f'- finish masking")
 
 
-if __name__  == "__main__":
+if __name__ == "__main__":
     from skimage import data
     image = data.coins()
     f, ax = plt.subplots()
