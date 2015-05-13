@@ -105,11 +105,10 @@ class ManualMask(object):
         >>> boolean_array = m.mask  # inside ROI(s) is True, outside False
         >>> label_array = m.label_array  # a unique number for each ROI
         """
-        cmap = ListedColormap([(1, 1, 1, 0), 'b'])
+        mask_cmap = ListedColormap([(1, 1, 1, 0), 'b'])
         norm = BoundaryNorm([0, 0.5, 1], cmap.N, clip=True)
 
         self._cid = None
-
 
         self.ax = ax
         self._base_format_fuc = ax.format_coord
@@ -124,12 +123,12 @@ class ManualMask(object):
         self.data = image
         self.mask = np.zeros(self.img_shape, dtype=bool)
 
-        self.base_image = ax.imshow(self.data, zorder=1, cmap='gray',
+        self.base_image = ax.imshow(self.data, zorder=1, cmap=cmap,
                                     interpolation='nearest')
         self.overlay_image = ax.imshow(self.mask,
                                        zorder=2,
                                        alpha=.66,
-                                       cmap=cmap,
+                                       cmap=mask_cmap,
                                        norm=norm,
                                        interpolation='nearest')
         ax.set_title("'i': lasso, 't': pixel flip, "
