@@ -35,99 +35,186 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE   #
 # POSSIBILITY OF SUCH DAMAGE.                                          #
 ########################################################################
+"""This module will allow to draw a manual mask or region of interests(roi's)
+for an image"""
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import six
-import sys
 import logging
+
+import numpy as np
+from scipy import ndimage
+from matplotlib.widgets import Lasso
+from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib import path
+from ..utils.mpl_helpers import ensure_ax_meth
 
 logger = logging.getLogger(__name__)
 
-import matplotlib
-matplotlib.use('TkAgg')
-
-from matplotlib.widgets import Lasso
-from matplotlib.patches import PathPatch
-from matplotlib import path
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-"""This module will allow to draw a manual mask or region of interests(roi's)
-for an image"""
 
 class ManualMask(object):
-    def __init__(self, ax, image):
-        self.axes = ax
+    @ensure_ax_meth
+    def __init__(self, ax, image, cmap='gray'):
+        """
+        Use a GUI to specify region(s) of interest.
+
+        The user can draw as many regions as desired and, at any point
+        during the process, access the results programatically using
+        the attributes below.
+
+        Note the following keyboard shortcuts:
+        r - remove (cut holes)
+        a - add (resume normal drawing)
+        u - undo
+
+        Parameters
+        ----------
+        ax : Axes, optional
+        image : array
+            backdrop shown under drawing
+            This is used for visual purposes and to set the shape of the
+            drawing canvas. Its content does not affect the output.
+        cmap : str, optional
+            'gray' by default
+
+        Attributes
+        ----------
+        mask : boolean array
+            all "postive" regions are True, negative False
+        label_array : integer array
+            each contiguous region is labeled with an integer
+        label_by_stroke : integer array
+            Each region drawn by the user is labeled with an integer.
+            Even regions that are contiguous or overlapping are given
+            unique labels if they were drawn separately. Where regions
+            overlap, the last-drawn region takes precedence.
+        sign : boolean
+            While True, all drawings add to the region(s) of interest.
+            While False, all drawing cuts holes in any regions of interest.
+
+        Methods
+        -------
+        undo()
+            Undo the last-drawn region.
+
+        Example
+        -------
+        >>> m = ManualMask(my_img)
+        >>> boolean_array = m.mask  # inside ROI(s) is True, outside False
+        >>> label_array = m.label_array  # a unique number for each ROI
+        """
+        mask_cmap = ListedColormap([(1, 1, 1, 0), 'b'])
+        norm = BoundaryNorm([0, 0.5, 1], cmap.N, clip=True)
+
+        self._cid = None
+
+        self.ax = ax
+        self._base_format_fuc = ax.format_coord
+
+        def wrapped_format_coord(x, y):
+            return "{} {}".format(self._active, self._base_format_fuc(x, y))
+
+        self.ax.format_coord = wrapped_format_coord
+
         self.canvas = ax.figure.canvas
-        self.data = image
         self.img_shape = image.shape
-        self.manual_mask_demo()
-        self.mask = np.zeros(image.shape[0]*image.shape[1], dtype=bool)
+        self.data = image
+        self.mask = np.zeros(self.img_shape, dtype=bool)
+
+        self.base_image = ax.imshow(self.data, zorder=1, cmap=cmap,
+                                    interpolation='nearest')
+        self.overlay_image = ax.imshow(self.mask,
+                                       zorder=2,
+                                       alpha=.66,
+                                       cmap=mask_cmap,
+                                       norm=norm,
+                                       interpolation='nearest')
+        ax.set_title("'i': lasso, 't': pixel flip, "
+                     "'r': reset mask, 'q': no tools ")
+
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
         self.points = np.transpose((x.ravel(), y.ravel()))
         self.canvas.mpl_connect('key_press_event', self.key_press_callback)
+        self._active = ''
 
-
-    def on_press(self, event):
+    def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
-           return
+            return
         if event.inaxes is None:
-           return
+            return
         self.lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
-                           self.call_back)
+                           self._lasso_call_back)
         # acquire a lock on the widget drawing
         self.canvas.widgetlock(self.lasso)
 
-
-    def call_back(self, verts):
+    def _lasso_call_back(self, verts):
         p = path.Path(verts)
-        self.patch = PathPatch(p, facecolor='g')
-        plt.gca().add_patch(self.patch)
+
+        self.canvas.widgetlock.release(self.lasso)
+        new_mask = p.contains_points(self.points).reshape(*self.img_shape)
+        self.mask = self.mask | new_mask
+
+        self.overlay_image.set_data(self.mask)
 
         self.canvas.draw_idle()
-        self.canvas.widgetlock.release(self.lasso)
 
-        self.mask = self.mask | p.contains_points(self.points)
+    def _pixel_flip_on_press(self, event):
+        if event.inaxes is not self.ax:
+            return
+        x, y = int(event.xdata + .5), int(event.ydata + .5)
+        if 0 <= x < self.img_shape[1] and 0 <= y <= self.img_shape[0]:
+            self.mask[y, x] = ~self.mask[y, x]
 
+        self.overlay_image.set_data(self.mask)
+
+        self.canvas.draw_idle()
 
     # TODO
-    def reset(self, event):
-	     #self.patch.remove()
-         pass
-
+    def reset(self):
+        self.mask *= False
+        self.overlay_image.set_data(self.mask)
+        self.canvas.draw_idle()
+        pass
 
     def key_press_callback(self, event):
         'whenever a key is pressed'
-        #  press 'i' to start drawing a mask(s)/roi(s) on the canvas"
-        #  press 'r' to remove the last roi's selected
-        #  press 'f' to stop drawing and create a numpy array(shape img_shape)
-        #  of the containing mask(s)/roi(s)
-        #  the mask array
         if not event.inaxes:
             return
-        if event.key=='i':
-            self.cid = self.canvas.mpl_connect('button_press_event',
-                                               self.on_press)
-        if event.key=='r':
-            self.rcid = self.canvas.mpl_connect('button_press_event',
-                                                self.reset)
-        if event.key=='f':
-            np.save("mask.npy", self.mask.reshape(self.img_shape))
-            plt.imshow(self.mask.reshape(self.img_shape))
+        if event.key == 'i':
+            self.enable_lasso()
+        elif event.key == 't':
+            self.enable_pixel_flip()
+        elif event.key == 'r':
+            self.reset()
+        elif event.key == 'q':
+            self.disable_tools()
 
+    def enable_lasso(self):
+        # turn off anything else
+        self.disable_tools()
 
-    def manual_mask_demo(self):
-        self.axes = plt.subplot(111)
-        self.axes.imshow(self.data)
-        plt.title("Press 'i'- start drawing a mask , Press 'f'- finish masking ")
+        self._cid = self.canvas.mpl_connect('button_press_event',
+                                            self._lasso_on_press)
+        self._active = 'lasso'
 
+    def enable_pixel_flip(self):
+        # turn off anything else
+        self.disable_tools()
 
-if __name__  == "__main__":
-    from skimage import data
-    image = data.coins()
-    f, ax = plt.subplots()
-    mc = ManualMask(ax, image)
-    plt.show()
+        self._cid = self.canvas.mpl_connect('button_press_event',
+                                            self._pixel_flip_on_press)
+        self._active = 'pixel flip'
+
+    def disable_tools(self):
+        if self._cid is not None:
+            self.canvas.mpl_disconnect(self._cid)
+            self._cid = None
+        self._active = ''
+        self.canvas.toolbar.set_message('')
+
+    @property
+    def label_array(self):
+        arr, num = ndimage.measurements.label(self.mask)
+        return arr
