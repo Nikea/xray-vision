@@ -79,18 +79,19 @@ class ManualMask(object):
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
         self.points = np.transpose((x.ravel(), y.ravel()))
         self.canvas.mpl_connect('key_press_event', self.key_press_callback)
+        self._active = 'none'
 
-    def on_press(self, event):
+    def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
             return
         if event.inaxes is None:
             return
         self.lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
-                           self.call_back)
+                           self._lasso_call_back)
         # acquire a lock on the widget drawing
         self.canvas.widgetlock(self.lasso)
 
-    def call_back(self, verts):
+    def _lasso_call_back(self, verts):
         p = path.Path(verts)
 
         self.canvas.widgetlock.release(self.lasso)
@@ -101,35 +102,55 @@ class ManualMask(object):
 
         self.canvas.draw_idle()
 
-    # TODO
-    def reset(self, event):
-        self.mask = np.zeros(np.prod(self.img_shape), dtype=bool)
+    def _pixel_flip_on_press(self, event):
+        if event.inaxes is not self.ax:
+            return
+        x, y = int(event.xdata + .5), int(event.ydata + .5)
+        if 0 <= x < self.img_shape[1] and 0 <= y <= self.img_shape[0]:
+            self.mask[y, x] = ~self.mask[y, x]
 
+        self.overlay_image.set_data(self.mask)
+
+        self.canvas.draw_idle()
+
+    # TODO
+    def reset(self):
+        self.mask *= False
+        self.overlay_image.set_data(self.mask)
+        self.canvas.draw_idle()
         pass
 
     def key_press_callback(self, event):
         'whenever a key is pressed'
-        #  press 'i' to start drawing a mask(s)/roi(s) on the canvas"
-        #  press 'r' to remove the last roi's selected
-        #  press 'f' to stop drawing and create a numpy array(shape img_shape)
-        #  of the containing mask(s)/roi(s)
-        #  the mask array
         if not event.inaxes:
             return
         if self._cid is None and event.key == 'i':
-            self._cid = self.canvas.mpl_connect('button_press_event',
-                                                self.on_press)
-            return
-
+            self.enable_lasso()
         elif event.key == 'r':
-            self.rcid = self.canvas.mpl_connect('button_press_event',
-                                                self.reset)
-            return
+            self.reset()
         elif self._cid is not None and event.key == 'q':
-            self.canvas.mpl_disconnect(self._cid)
-            self._cid = None
-            return
+            self.disable_tools()
 
+    def enable_lasso(self):
+        # turn off anything else
+        self.disable_tools()
+
+        self._cid = self.canvas.mpl_connect('button_press_event',
+                                            self._lasso_on_press)
+        self._active = 'lasso'
+
+    def enable_pixel_flip(self):
+        # turn off anything else
+        self.disable_tools()
+
+        self._cid = self.canvas.mpl_connect('button_press_event',
+                                            self._pixel_flip_on_press)
+        self._active = 'pixel flip'
+
+    def disable_tools(self):
+        if self._cid is not None:
+            self.canvas.mpl_disconnect(self._cid)
+        self._active = 'none'
 
 if __name__ == "__main__":
     from skimage import data
