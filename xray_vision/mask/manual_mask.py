@@ -168,6 +168,9 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     image = data.coins()
+
     f, ax = plt.subplots()
+    f.canvas.mpl_disconnect(f.canvas.manager.key_press_handler_id)
+    f.canvas.manager.key_press_handler_id = None
     mc = ManualMask(ax, image)
     plt.show()
