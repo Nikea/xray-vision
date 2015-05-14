@@ -121,7 +121,7 @@ class ManualMask(object):
         self.canvas = ax.figure.canvas
         self.img_shape = image.shape
         self.data = image
-        self.mask = np.zeros(self.img_shape, dtype=bool)
+        self._mask = np.zeros(self.img_shape, dtype=bool)
 
         self.base_image = ax.imshow(self.data, zorder=1, cmap=cmap,
                                     interpolation='nearest')
@@ -165,28 +165,29 @@ class ManualMask(object):
         else:
             self.mask = self.mask | new_mask
 
-        self.overlay_image.set_data(self.mask)
-
-        self.canvas.draw_idle()
         self.lasso = None
 
     def _pixel_flip_on_press(self, event):
         if event.inaxes is not self.ax:
             return
         x, y = int(event.xdata + .5), int(event.ydata + .5)
+        tmp_mask = self.mask
         if 0 <= x < self.img_shape[1] and 0 <= y <= self.img_shape[0]:
-            self.mask[y, x] = ~self.mask[y, x]
+            tmp_mask[y, x] = ~tmp_mask[y, x]
+            self.mask = tmp_mask
 
-        self.overlay_image.set_data(self.mask)
+    @property
+    def mask(self):
+        return self._mask
 
+    @mask.setter
+    def mask(self, v):
+        self._mask = v
+        self.overlay_image.set_data(v)
         self.canvas.draw_idle()
 
-    # TODO
     def reset(self):
-        self.mask *= False
-        self.overlay_image.set_data(self.mask)
-        self.canvas.draw_idle()
-        pass
+        self.mask = self.mask * False
 
     def key_press_callback(self, event):
         'whenever a key is pressed'
