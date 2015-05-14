@@ -131,14 +131,15 @@ class ManualMask(object):
                                        cmap=mask_cmap,
                                        norm=norm,
                                        interpolation='nearest')
-        ax.set_title("'i': lasso, 't': pixel flip, "
-                     "'r': reset mask, 'q': no tools ")
+        ax.set_title("'i': lasso, 't': pixel flip, shift inverts lasso, "
+                     "'r': reset mask, 'q': no tools")
 
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
         self.points = np.transpose((x.ravel(), y.ravel()))
         self.canvas.mpl_connect('key_press_event', self.key_press_callback)
         self._active = ''
         self.lasso = None
+        self._remove = False
 
     def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
@@ -148,6 +149,7 @@ class ManualMask(object):
                 return
         if event.inaxes is not self.ax:
             return
+        self._remove = event.key == 'shift'
         self.lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
                            self._lasso_call_back)
         # acquire a lock on the widget drawing
@@ -158,7 +160,10 @@ class ManualMask(object):
         p = path.Path(verts)
 
         new_mask = p.contains_points(self.points).reshape(*self.img_shape)
-        self.mask = self.mask | new_mask
+        if self._remove:
+            self.mask = self.mask & ~new_mask
+        else:
+            self.mask = self.mask | new_mask
 
         self.overlay_image.set_data(self.mask)
 
