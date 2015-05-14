@@ -138,10 +138,14 @@ class ManualMask(object):
         self.points = np.transpose((x.ravel(), y.ravel()))
         self.canvas.mpl_connect('key_press_event', self.key_press_callback)
         self._active = ''
+        self.lasso = None
 
     def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
-            return
+            if self.canvas.widgetlock.isowner(self.lasso):
+                self.canvas.widgetlock.release(self.lasso)
+            else:
+                return
         if event.inaxes is None:
             return
         self.lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
@@ -150,15 +154,16 @@ class ManualMask(object):
         self.canvas.widgetlock(self.lasso)
 
     def _lasso_call_back(self, verts):
+        self.canvas.widgetlock.release(self.lasso)
         p = path.Path(verts)
 
-        self.canvas.widgetlock.release(self.lasso)
         new_mask = p.contains_points(self.points).reshape(*self.img_shape)
         self.mask = self.mask | new_mask
 
         self.overlay_image.set_data(self.mask)
 
         self.canvas.draw_idle()
+        self.lasso = None
 
     def _pixel_flip_on_press(self, event):
         if event.inaxes is not self.ax:
@@ -211,6 +216,10 @@ class ManualMask(object):
         if self._cid is not None:
             self.canvas.mpl_disconnect(self._cid)
             self._cid = None
+            if self.lasso and self.canvas.widgetlock.isowner(self.lasso):
+                self.canvas.widgetlock.release(self.lasso)
+                self.lasso = None
+
         self._active = ''
         self.canvas.toolbar.set_message('')
 
