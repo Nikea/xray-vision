@@ -146,7 +146,7 @@ class ManualMask(object):
                 self.canvas.widgetlock.release(self.lasso)
             else:
                 return
-        if event.inaxes is None:
+        if event.inaxes is not self.ax:
             return
         self.lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
                            self._lasso_call_back)
