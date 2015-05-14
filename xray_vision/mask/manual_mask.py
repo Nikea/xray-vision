@@ -106,7 +106,7 @@ class ManualMask(object):
         >>> label_array = m.label_array  # a unique number for each ROI
         """
         mask_cmap = ListedColormap([(1, 1, 1, 0), 'b'])
-        norm = BoundaryNorm([0, 0.5, 1], cmap.N, clip=True)
+        norm = BoundaryNorm([0, 0.5, 1], mask_cmap.N, clip=True)
 
         self._cid = None
 
