@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 class ManualMask(object):
     @ensure_ax_meth
-    def __init__(self, ax, image, cmap='gray', max_memory=20):
+    def __init__(self, ax, image, cmap='gray', undo_history_depth=20):
         """
         Use a GUI to specify region(s) of interest.
 
@@ -81,7 +81,7 @@ class ManualMask(object):
             drawing canvas. Its content does not affect the output.
         cmap : str, optional
             'gray' by default
-        max_memory : int, optional
+        undo_history_depth : int, optional
             The maximum number of frames to keep in the undo history
             Defaults to 20.
 
@@ -151,7 +151,7 @@ class ManualMask(object):
         self._active = ''
         self._lasso = None
         self._remove = False
-        self._mask_stack = deque([], max_memory)
+        self._mask_stack = deque([], undo_history_depth)
 
     def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
