@@ -147,28 +147,28 @@ class ManualMask(object):
 
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
         self.points = np.transpose((x.ravel(), y.ravel()))
-        self.canvas.mpl_connect('key_press_event', self.key_press_callback)
+        self.canvas.mpl_connect('key_press_event', self._key_press_callback)
         self._active = ''
-        self.lasso = None
+        self._lasso = None
         self._remove = False
         self._mask_stack = deque([], max_memory)
 
     def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
-            if self.canvas.widgetlock.isowner(self.lasso):
-                self.canvas.widgetlock.release(self.lasso)
+            if self.canvas.widgetlock.isowner(self._lasso):
+                self.canvas.widgetlock.release(self._lasso)
             else:
                 return
         if event.inaxes is not self.ax:
             return
         self._remove = event.key == 'shift'
-        self.lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
+        self._lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
                            self._lasso_call_back)
         # acquire a lock on the widget drawing
-        self.canvas.widgetlock(self.lasso)
+        self.canvas.widgetlock(self._lasso)
 
     def _lasso_call_back(self, verts):
-        self.canvas.widgetlock.release(self.lasso)
+        self.canvas.widgetlock.release(self._lasso)
         p = path.Path(verts)
 
         new_mask = p.contains_points(self.points).reshape(*self.img_shape)
@@ -177,7 +177,7 @@ class ManualMask(object):
         else:
             self.mask = self.mask | new_mask
 
-        self.lasso = None
+        self._lasso = None
 
     def _pixel_flip_on_press(self, event):
         if event.inaxes is not self.ax:
@@ -213,7 +213,7 @@ class ManualMask(object):
     def reset(self):
         self.mask = self.mask * False
 
-    def key_press_callback(self, event):
+    def _key_press_callback(self, event):
         'whenever a key is pressed'
         if not event.inaxes:
             return
@@ -248,9 +248,9 @@ class ManualMask(object):
         if self._cid is not None:
             self.canvas.mpl_disconnect(self._cid)
             self._cid = None
-            if self.lasso and self.canvas.widgetlock.isowner(self.lasso):
-                self.canvas.widgetlock.release(self.lasso)
-                self.lasso = None
+            if self._lasso and self.canvas.widgetlock.isowner(self._lasso):
+                self.canvas.widgetlock.release(self._lasso)
+                self._lasso = None
 
         self._active = ''
         self.canvas.toolbar.set_message('')
