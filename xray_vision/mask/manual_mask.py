@@ -67,7 +67,7 @@ class ManualMask(object):
         Note the following keyboard shortcuts:
 
         i - enable lasso, free hand drawing to select points
-          shift - while lasso in active, invert selection to remove points
+          alt - while lasso in active, invert selection to remove points
         t - pixel flipping, toggle individual pixels
         r - clear, remove all masks
         z - undo, undo the last edit up to `max_memory` steps back
@@ -142,7 +142,7 @@ class ManualMask(object):
                                        cmap=mask_cmap,
                                        norm=norm,
                                        interpolation='nearest')
-        ax.set_title("'i': lasso, 't': pixel flip, shift inverts lasso, "
+        ax.set_title("'i': lasso, 't': pixel flip, alt inverts lasso, "
                      "'r': reset mask, 'q': no tools")
 
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
@@ -170,7 +170,7 @@ class ManualMask(object):
                 return
         if event.inaxes is not self.ax:
             return
-        self._remove = event.key == 'shift'
+        self._remove = event.key == 'alt'
         self._lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
                             self._lasso_call_back)
         # acquire a lock on the widget drawing
