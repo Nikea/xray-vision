@@ -67,7 +67,7 @@ class ManualMask(object):
         Note the following keyboard shortcuts:
 
         i - enable lasso, free hand drawing to select points
-           shift - while lasso in active, invert selection to remove points
+          shift - while lasso in active, invert selection to remove points
         t - pixel flipping, toggle individual pixels
         r - clear, remove all masks
         z - undo, undo the last edit up to `max_memory` steps back
@@ -155,15 +155,24 @@ class ManualMask(object):
 
     def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
+            # clicking and releasing with out moving the mouse with the lasso
+            # tool does not fire our call back (which unlock the canvas) but
+            # does file the internal call backs which clean up the lasso
+            # leaving the canvas in a dead-locked state (due to our locking)
+
+            # if the canvas is locked by the last-used lasso tool and we are
+            # hitting the on-click logic again then we must be in the dead lock
+            # state so unlock the canvas.
             if self.canvas.widgetlock.isowner(self._lasso):
                 self.canvas.widgetlock.release(self._lasso)
+            # or something else holds the lock, do nothing
             else:
                 return
         if event.inaxes is not self.ax:
             return
         self._remove = event.key == 'shift'
         self._lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
-                           self._lasso_call_back)
+                            self._lasso_call_back)
         # acquire a lock on the widget drawing
         self.canvas.widgetlock(self._lasso)
 
@@ -248,6 +257,7 @@ class ManualMask(object):
         if self._cid is not None:
             self.canvas.mpl_disconnect(self._cid)
             self._cid = None
+            # see discussion of dead-locked canvas states above
             if self._lasso and self.canvas.widgetlock.isowner(self._lasso):
                 self.canvas.widgetlock.release(self._lasso)
                 self._lasso = None
