@@ -65,9 +65,12 @@ class ManualMask(object):
         the attributes below.
 
         Note the following keyboard shortcuts:
-        r - remove (cut holes)
-        a - add (resume normal drawing)
-        u - undo
+
+        i - enable lasso, free hand drawing to select points
+           shift - while lasso in active, invert selection to remove points
+        t - pixel flipping, toggle individual pixels
+        r - clear, remove all masks
+        z - undo, undo the last edit up to `max_memory` steps back
 
         Parameters
         ----------
@@ -78,26 +81,34 @@ class ManualMask(object):
             drawing canvas. Its content does not affect the output.
         cmap : str, optional
             'gray' by default
+        max_memory : int, optional
+            The maximum number of frames to keep in the undo history
+            Defaults to 20.
 
         Attributes
         ----------
         mask : boolean array
             all "postive" regions are True, negative False
+
         label_array : integer array
             each contiguous region is labeled with an integer
-        label_by_stroke : integer array
-            Each region drawn by the user is labeled with an integer.
-            Even regions that are contiguous or overlapping are given
-            unique labels if they were drawn separately. Where regions
-            overlap, the last-drawn region takes precedence.
-        sign : boolean
-            While True, all drawings add to the region(s) of interest.
-            While False, all drawing cuts holes in any regions of interest.
 
         Methods
         -------
         undo()
             Undo the last-drawn region.
+
+        reset()
+            Clear all regions
+
+        enable_lasso()
+            Enables the lasso to select free hand regions.
+
+        enable_pixel_flip()
+            Enables toggling individual pixels on/off
+
+        disable_tools()
+            Turns off all mouse driven input
 
         Example
         -------
