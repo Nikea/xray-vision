@@ -43,7 +43,7 @@ from __future__ import (absolute_import, division, print_function,
 
 import six
 import logging
-
+from collections import deque
 import numpy as np
 from scipy import ndimage
 from matplotlib.widgets import Lasso
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 class ManualMask(object):
     @ensure_ax_meth
-    def __init__(self, ax, image, cmap='gray'):
+    def __init__(self, ax, image, cmap='gray', max_memory=20):
         """
         Use a GUI to specify region(s) of interest.
 
@@ -140,6 +140,7 @@ class ManualMask(object):
         self._active = ''
         self.lasso = None
         self._remove = False
+        self._mask_stack = deque([], max_memory)
 
     def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
@@ -182,9 +183,21 @@ class ManualMask(object):
 
     @mask.setter
     def mask(self, v):
+        self._mask_stack.append(self._mask)
         self._mask = v
         self.overlay_image.set_data(v)
         self.canvas.draw_idle()
+
+    def undo(self):
+        try:
+            # pop off the previous mask
+            new_old_mask = self._mask_stack.pop()
+            # assign the previous mask to be the current one
+            self.mask = new_old_mask
+            # pop off and discard (for now) the previous current mask
+            self._mask_stack.pop()
+        except IndexError:
+            pass
 
     def reset(self):
         self.mask = self.mask * False
@@ -201,6 +214,8 @@ class ManualMask(object):
             self.reset()
         elif event.key == 'q':
             self.disable_tools()
+        elif event.key == 'z':
+            self.undo()
 
     def enable_lasso(self):
         # turn off anything else
