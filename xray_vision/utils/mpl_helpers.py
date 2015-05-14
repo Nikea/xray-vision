@@ -25,8 +25,8 @@ def ensure_ax_meth(func):
         args = args[1:]
         if 'ax' in kwargs:
             ax = kwargs.pop('ax', None)
-        elif len(args) > 1 and isinstance(args[1], matplotlib.axes.Axes):
-            ax = args[1]
+        elif len(args) > 1 and isinstance(args[0], matplotlib.axes.Axes):
+            ax = args[0]
             args = args[1:]
         else:
             ax = plt.gca()
