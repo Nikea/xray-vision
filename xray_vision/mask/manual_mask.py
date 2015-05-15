@@ -43,7 +43,7 @@ from __future__ import (absolute_import, division, print_function,
 
 import six
 import logging
-
+from collections import deque
 import numpy as np
 from scipy import ndimage
 from matplotlib.widgets import Lasso
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 class ManualMask(object):
     @ensure_ax_meth
-    def __init__(self, ax, image, cmap='gray'):
+    def __init__(self, ax, image, cmap='gray', undo_history_depth=20):
         """
         Use a GUI to specify region(s) of interest.
 
@@ -65,9 +65,12 @@ class ManualMask(object):
         the attributes below.
 
         Note the following keyboard shortcuts:
-        r - remove (cut holes)
-        a - add (resume normal drawing)
-        u - undo
+
+        i - enable lasso, free hand drawing to select points
+          alt - while lasso in active, invert selection to remove points
+        t - pixel flipping, toggle individual pixels
+        r - clear, remove all masks
+        z - undo, undo the last edit up to `max_memory` steps back
 
         Parameters
         ----------
@@ -78,26 +81,34 @@ class ManualMask(object):
             drawing canvas. Its content does not affect the output.
         cmap : str, optional
             'gray' by default
+        undo_history_depth : int, optional
+            The maximum number of frames to keep in the undo history
+            Defaults to 20.
 
         Attributes
         ----------
         mask : boolean array
             all "postive" regions are True, negative False
+
         label_array : integer array
             each contiguous region is labeled with an integer
-        label_by_stroke : integer array
-            Each region drawn by the user is labeled with an integer.
-            Even regions that are contiguous or overlapping are given
-            unique labels if they were drawn separately. Where regions
-            overlap, the last-drawn region takes precedence.
-        sign : boolean
-            While True, all drawings add to the region(s) of interest.
-            While False, all drawing cuts holes in any regions of interest.
 
         Methods
         -------
         undo()
             Undo the last-drawn region.
+
+        reset()
+            Clear all regions
+
+        enable_lasso()
+            Enables the lasso to select free hand regions.
+
+        enable_pixel_flip()
+            Enables toggling individual pixels on/off
+
+        disable_tools()
+            Turns off all mouse driven input
 
         Example
         -------
@@ -106,7 +117,7 @@ class ManualMask(object):
         >>> label_array = m.label_array  # a unique number for each ROI
         """
         mask_cmap = ListedColormap([(1, 1, 1, 0), 'b'])
-        norm = BoundaryNorm([0, 0.5, 1], cmap.N, clip=True)
+        norm = BoundaryNorm([0, 0.5, 1], mask_cmap.N, clip=True)
 
         self._cid = None
 
@@ -121,7 +132,7 @@ class ManualMask(object):
         self.canvas = ax.figure.canvas
         self.img_shape = image.shape
         self.data = image
-        self.mask = np.zeros(self.img_shape, dtype=bool)
+        self._mask = np.zeros(self.img_shape, dtype=bool)
 
         self.base_image = ax.imshow(self.data, zorder=1, cmap=cmap,
                                     interpolation='nearest')
@@ -131,54 +142,87 @@ class ManualMask(object):
                                        cmap=mask_cmap,
                                        norm=norm,
                                        interpolation='nearest')
-        ax.set_title("'i': lasso, 't': pixel flip, "
-                     "'r': reset mask, 'q': no tools ")
+        ax.set_title("'i': lasso, 't': pixel flip, alt inverts lasso, "
+                     "'r': reset mask, 'q': no tools")
 
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
         self.points = np.transpose((x.ravel(), y.ravel()))
-        self.canvas.mpl_connect('key_press_event', self.key_press_callback)
+        self.canvas.mpl_connect('key_press_event', self._key_press_callback)
         self._active = ''
+        self._lasso = None
+        self._remove = False
+        self._mask_stack = deque([], undo_history_depth)
 
     def _lasso_on_press(self, event):
         if self.canvas.widgetlock.locked():
+            # clicking and releasing with out moving the mouse with the lasso
+            # tool does not fire our call back (which unlock the canvas) but
+            # does file the internal call backs which clean up the lasso
+            # leaving the canvas in a dead-locked state (due to our locking)
+
+            # if the canvas is locked by the last-used lasso tool and we are
+            # hitting the on-click logic again then we must be in the dead lock
+            # state so unlock the canvas.
+            if self.canvas.widgetlock.isowner(self._lasso):
+                self.canvas.widgetlock.release(self._lasso)
+            # or something else holds the lock, do nothing
+            else:
+                return
+        if event.inaxes is not self.ax:
             return
-        if event.inaxes is None:
-            return
-        self.lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
-                           self._lasso_call_back)
+        self._remove = event.key == 'alt'
+        self._lasso = Lasso(event.inaxes, (event.xdata, event.ydata),
+                            self._lasso_call_back)
         # acquire a lock on the widget drawing
-        self.canvas.widgetlock(self.lasso)
+        self.canvas.widgetlock(self._lasso)
 
     def _lasso_call_back(self, verts):
+        self.canvas.widgetlock.release(self._lasso)
         p = path.Path(verts)
 
-        self.canvas.widgetlock.release(self.lasso)
         new_mask = p.contains_points(self.points).reshape(*self.img_shape)
-        self.mask = self.mask | new_mask
+        if self._remove:
+            self.mask = self.mask & ~new_mask
+        else:
+            self.mask = self.mask | new_mask
 
-        self.overlay_image.set_data(self.mask)
-
-        self.canvas.draw_idle()
+        self._lasso = None
 
     def _pixel_flip_on_press(self, event):
         if event.inaxes is not self.ax:
             return
         x, y = int(event.xdata + .5), int(event.ydata + .5)
+        tmp_mask = self.mask
         if 0 <= x < self.img_shape[1] and 0 <= y <= self.img_shape[0]:
-            self.mask[y, x] = ~self.mask[y, x]
+            tmp_mask[y, x] = ~tmp_mask[y, x]
+            self.mask = tmp_mask
 
-        self.overlay_image.set_data(self.mask)
+    @property
+    def mask(self):
+        return self._mask
 
+    @mask.setter
+    def mask(self, v):
+        self._mask_stack.append(self._mask)
+        self._mask = v
+        self.overlay_image.set_data(v)
         self.canvas.draw_idle()
 
-    # TODO
+    def undo(self):
+        try:
+            # pop off the previous mask
+            new_old_mask = self._mask_stack.pop()
+            # assign the previous mask to be the current one
+            self.mask = new_old_mask
+            # pop off and discard (for now) the previous current mask
+            self._mask_stack.pop()
+        except IndexError:
+            pass
+
     def reset(self):
-        self.mask *= False
-        self.overlay_image.set_data(self.mask)
-        self.canvas.draw_idle()
-        pass
+        self.mask = self.mask * False
 
-    def key_press_callback(self, event):
+    def _key_press_callback(self, event):
         'whenever a key is pressed'
         if not event.inaxes:
             return
@@ -190,6 +234,8 @@ class ManualMask(object):
             self.reset()
         elif event.key == 'q':
             self.disable_tools()
+        elif event.key == 'z':
+            self.undo()
 
     def enable_lasso(self):
         # turn off anything else
@@ -211,6 +257,11 @@ class ManualMask(object):
         if self._cid is not None:
             self.canvas.mpl_disconnect(self._cid)
             self._cid = None
+            # see discussion of dead-locked canvas states above
+            if self._lasso and self.canvas.widgetlock.isowner(self._lasso):
+                self.canvas.widgetlock.release(self._lasso)
+                self._lasso = None
+
         self._active = ''
         self.canvas.toolbar.set_message('')
 
