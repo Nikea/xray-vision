@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 class ManualMask(object):
     @ensure_ax_meth
-    def __init__(self, ax, image, cmap='gray', undo_history_depth=20):
+    def __init__(self, ax, image, cmap='gray', vmax=None, undo_history_depth=20):
         """
         Use a GUI to specify region(s) of interest.
 
@@ -134,7 +134,7 @@ class ManualMask(object):
         self.data = image
         self._mask = np.zeros(self.img_shape, dtype=bool)
 
-        self.base_image = ax.imshow(self.data, zorder=1, cmap=cmap,
+        self.base_image = ax.imshow(self.data, zorder=1, cmap=cmap, vmax=vmax,
                                     interpolation='nearest')
         self.overlay_image = ax.imshow(self.mask,
                                        zorder=2,
