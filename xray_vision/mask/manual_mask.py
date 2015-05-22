@@ -56,7 +56,12 @@ logger = logging.getLogger(__name__)
 
 class ManualMask(object):
     @ensure_ax_meth
-    def __init__(self, ax, image, cmap='gray', vmax=None, undo_history_depth=20):
+    def __init__(self, ax, image, cmap='gray',
+                 norm=None, aspect=None,
+                 interpolation='nearest', alpha=None, vmin=None, vmax=None,
+                 origin=None, extent=None, filternorm=1,
+                 filterrad=4.0, resample=None, url=None,
+                 undo_history_depth=20, **kwargs):
         """
         Use a GUI to specify region(s) of interest.
 
@@ -84,6 +89,11 @@ class ManualMask(object):
         undo_history_depth : int, optional
             The maximum number of frames to keep in the undo history
             Defaults to 20.
+
+        Other Parameters
+        ----------------
+
+        Takes all arguments of Axes.imshow
 
         Attributes
         ----------
@@ -117,7 +127,7 @@ class ManualMask(object):
         >>> label_array = m.label_array  # a unique number for each ROI
         """
         mask_cmap = ListedColormap([(1, 1, 1, 0), 'b'])
-        norm = BoundaryNorm([0, 0.5, 1], mask_cmap.N, clip=True)
+        mask_norm = BoundaryNorm([0, 0.5, 1], mask_cmap.N, clip=True)
 
         self._cid = None
 
@@ -134,14 +144,22 @@ class ManualMask(object):
         self.data = image
         self._mask = np.zeros(self.img_shape, dtype=bool)
 
-        self.base_image = ax.imshow(self.data, zorder=1, cmap=cmap, vmax=vmax,
-                                    interpolation='nearest')
+        self.base_image = ax.imshow(self.data, zorder=1, cmap=cmap,
+                                    norm=norm, aspect=aspect,
+                                    interpolation=interpolation, alpha=alpha,
+                                    vmin=vmin, vmax=vmax,
+                                    origin=origin, extent=extent,
+                                    filternorm=1,
+                                    filterrad=4.0, resample=resample, url=url,
+                                    **kwargs)
+
         self.overlay_image = ax.imshow(self.mask,
                                        zorder=2,
                                        alpha=.66,
                                        cmap=mask_cmap,
-                                       norm=norm,
-                                       interpolation='nearest')
+                                       norm=mask_norm,
+                                       interpolation='nearest',
+                                       origin=origin, extent=extent)
         ax.set_title("'i': lasso, 't': pixel flip, alt inverts lasso, "
                      "'r': reset mask, 'q': no tools")
 
