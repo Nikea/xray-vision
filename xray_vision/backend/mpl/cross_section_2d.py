@@ -414,7 +414,7 @@ class CrossSection(object):
             Function that gets called when the cursor position moves to a new
             row or column on main axes
         """
-        self._cursor_position_cbs.append(fun)
+        self._cursor_position_cbs.append(callback)
 
     # set up the call back for the updating the side axes
     def _move_cb(self, event):
