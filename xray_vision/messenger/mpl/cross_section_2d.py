@@ -138,7 +138,7 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
     # some defaults
     default_cmap = AbstractMPLDataView._default_cmap
 
-    _CMAPS = datad.keys()
+    _CMAPS = list(datad.keys())
     _CMAPS.sort()
 
     def __init__(self, name, init_img, num_images):
