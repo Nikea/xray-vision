@@ -453,7 +453,6 @@ class CrossSection(object):
                         ax.draw_artist(art)
                         self._fig.canvas.blit(ax.bbox)
 
-
     def _click_cb(self, event):
         if event.inaxes is not self._im_ax:
             return
@@ -470,10 +469,10 @@ class CrossSection(object):
         self._disconnect_callbacks()
         self._cur = Cursor(self._im_ax, useblit=True, color='red', linewidth=2)
         self._move_cid = self._fig.canvas.mpl_connect('motion_notify_event',
-                                                     self._move_cb)
+                                                      self._move_cb)
 
         self._click_cid = self._fig.canvas.mpl_connect('button_press_event',
-                                                      self._click_cb)
+                                                       self._click_cb)
 
         self._clear_cid = self._fig.canvas.mpl_connect('draw_event',
                                                        self._clear)

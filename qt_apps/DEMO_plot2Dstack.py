@@ -76,17 +76,16 @@ class data_gen(object):
         len(self._x), len(self._y)
 
 def data_gen(length):
-       x, y = [_ * 2 * np.pi / 500 for _ in
-                            np.ogrid[-500:500, -500:500]]
-       rep = int(np.sqrt(length))
-       data = []
-       lbls = []
-       for idx in range(length):
-            lbls.append(str(idx))
-            kx = idx // rep + 1
-            ky = idx % rep
-            data.append(np.sin(kx * x) * np.cos(ky * y) + 1.05)
-       return lbls, data
+    x, y = [_ * 2 * np.pi / 500 for _ in np.ogrid[-500:500, -500:500]]
+    rep = int(np.sqrt(length))
+    data = []
+    lbls = []
+    for idx in range(length):
+        lbls.append(str(idx))
+        kx = idx // rep + 1
+        ky = idx % rep
+        data.append(np.sin(kx * x) * np.cos(ky * y) + 1.05)
+    return lbls, data
 
 
 class StackExplorer(QtGui.QMainWindow):
