@@ -1,6 +1,6 @@
 from skimage import draw as skd
-import matplotlib.pypolt as plt
-import xrayvision.mpl_plotting as xrv_plt
+import matplotlib.pyplot as plt
+import xray_vision.mpl_plotting as xrv_plt
 import numpy as np
 
 frame_shape = (128, 128)
