@@ -50,18 +50,16 @@ class CDIPlotter(object):
     @classmethod
     def from_axes(cls, ax0, ax1, ax2, ax3):
         """
-        Set the axes from outside.
+        Set the axes from outside. The axes will be cleared
+        once they are passed in. This means users can not use
+        this function to overlay multiple calls
 
         Parameters
         ----------
-        ax0 : figure.axes
-            from matplotlib
-        ax1 : figure.axes
-            from matplotlib
-        ax2 : figure.axes
-            from matplotlib
-        ax3 : figure.axes
-            from matplotlib
+        ax0 : matplotlib.axes.Axes
+        ax1 : matplotlib.axes.Axes
+        ax2 : matplotlib.axes.Axes
+        ax3 : matplotlib.axes.Axes
         """
         plot = CDIPlotter()
         # clear the axes
