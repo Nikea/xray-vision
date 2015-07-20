@@ -125,9 +125,9 @@ def combine_intensity_plotter(ax, combine_intensity,
     num_rois = combine_intensity.shape[1]
     for i in range(num_rois):
         ax.set_ylabel(ylabel)
-        ax_set_xlabel(xlabel)
+        ax.set_xlabel(xlabel)
         ax.set_title(title)
-        ax.plot(combine_intensity[:, i], label=str(j)+" ROI")
+        ax.plot(combine_intensity[:, i], label=str(i+1)+" ROI")
     plt.legend()
 
 
@@ -178,10 +178,10 @@ def circular_average_plotter(ax1, ax2, image_data, ring_averages, bin_centers,
     y_label : str, optional
         y axis label circular average plot
     """
-    ax1.imshow(imge_data, cmap=cmap, vmin=vmin, vmax=vmax)
+    ax1.imshow(image_data, cmap=cmap, vmin=vmin, vmax=vmax)
     ax1.set_title(i_title)
 
-    ax2.semilogy(bin_centers, ring_averages, c=line_color, marker=maker)
+    ax2.semilogy(bin_centers, ring_averages, c=line_color, marker=marker)
     ax2.set_title(c_title)
     ax2.set_xlabel(xlabel)
     ax2.set_ylabel(ylabel)
@@ -225,7 +225,7 @@ def roi_kymograph_plotter(ax, kymograph_data, title="ROI Kymograph",
     ax.imshow(kymograph_data, cmap=cmap)
 
 
-def roi_pixel_plotter(axes, roi_pixel_data, title='', xlabel='pixel list',
+def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ', xlabel='pixel list',
                       ylabel='Intensity'):
     """
     ROI pixel plotter
@@ -244,10 +244,10 @@ def roi_pixel_plotter(axes, roi_pixel_data, title='', xlabel='pixel list',
     y_label : str, optional
 
     """
-    num_rois = roi_pixel_data.shape[1]
+    num_rois = len(roi_pixel_data.values())
     for i in range(num_rois):
-        axes[i].plot(roi_pixel_data[:, i])
+        axes[i].plot(roi_pixel_data.values()[i])
         axes[i].set_xlabel(xlabel)
         axes[i].set_ylabel(ylabel)
-        axes[i].set_title(title)
-    plt.legend()
+        axes[i].set_title(title+str(i+1))
+
