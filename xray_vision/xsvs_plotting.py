@@ -48,6 +48,7 @@ import matplotlib.pyplot as plt
 
 """
     Plotting tools for X-Ray Speckle Visibility Spectroscopy(XSVS)
+    Analysis tools can be found at scikit-xray.speckle_analysis module
 """
 
 
@@ -60,8 +61,8 @@ def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
 
     Parameters
     ----------
-     ax : Axes
-        The `Axes` object to add the artist tool
+    ax : list of Axes
+        list of `Axes` objects to add the artist tool
 
     mean_intensity_sets : list
         Average intensities of each ROI as a list
@@ -80,7 +81,9 @@ def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
         y axis label
 
     """
-    if np.all(map(lambda x: x == index_list[0], index_list)):
+    if np.all(map(lambda x: x == index_list[0], index_list)) is False:
+        raise ValueError("Labels list for the image sets are different")
+    else:
         ax[len(index_list[0])-1].set_xlabel(xlabel)
         for i in range(len(index_list[0])):
             ax[i].set_ylabel(ylabel)
@@ -94,14 +97,13 @@ def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
                 ax[i].plot(x_val[first:total], mean_intensity_sets[j][:, i],
                            label=str(j+1)+" image_set")
                 first = total
-        plt.legend()
-    else:
-        raise ValueError("Labels list for the image sets are different")
+            ax[i].legend()
 
 
 def combine_intensity_plotter(ax, combine_intensity,
                               title="Mean Intensities - All Image Sets",
-                              xlabel="Frames", ylabel="Mean Intensity"):
+                              xlabel="Frames", ylabel="Mean Intensity",
+                              label=" ROI"):
     """
     This will plot the combine intensities for all image sets
 
@@ -127,8 +129,8 @@ def combine_intensity_plotter(ax, combine_intensity,
         ax.set_ylabel(ylabel)
         ax.set_xlabel(xlabel)
         ax.set_title(title)
-        ax.plot(combine_intensity[:, i], label=str(i+1)+" ROI")
-    plt.legend()
+        ax.plot(combine_intensity[:, i], label=str(i+1)+label)
+    ax.legend()
 
 
 def circular_average_plotter(ax1, ax2, image_data, ring_averages, bin_centers,
@@ -137,6 +139,8 @@ def circular_average_plotter(ax1, ax2, image_data, ring_averages, bin_centers,
                              line_color='blue', xlabel="Bin Centers",
                              ylabel="Ring Average"):
     """
+    This will plot image data and circular average of the that image data
+
     Parameters
     ----------
     ax1 : Axes
@@ -173,10 +177,10 @@ def circular_average_plotter(ax1, ax2, image_data, ring_averages, bin_centers,
         line color
 
     x_label : str, optional
-        x axis label circular average plot
+        x axis label for circular average plot
 
     y_label : str, optional
-        y axis label circular average plot
+        y axis label for circular average plot
     """
     ax1.imshow(image_data, cmap=cmap, vmin=vmin, vmax=vmax)
     ax1.set_title(i_title)
@@ -225,29 +229,39 @@ def roi_kymograph_plotter(ax, kymograph_data, title="ROI Kymograph",
     ax.imshow(kymograph_data, cmap=cmap)
 
 
-def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ', xlabel='pixel list',
-                      ylabel='Intensity'):
+def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
+                      xlabel='pixel list', ylabel='Intensity', label="ROI "):
     """
-    ROI pixel plotter
+    This will plot the intensities of the ROI's of the labeled array according
+    to the pixel list
+
     Parameters
     ----------
-    ax :
+    ax : list of Axes
+        list of `Axes` objects to add the artist tool
 
-    mean_intensity : array
+    roi_pixel_data : dict
+        the intensities of the ROI"s of the labeled array according to the
+        pixel list
 
     title : str, optional
-
-    fig_size : tuple, optional
+        title for the plot
 
     x_label : str, optional
+        x axis label
 
     y_label : str, optional
+        y axis label
+
+    label : str, optional
+        legend label
 
     """
     num_rois = len(roi_pixel_data.values())
     for i in range(num_rois):
-        axes[i].plot(roi_pixel_data.values()[i])
+        axes[i].plot(roi_pixel_data.values()[i], label=label+str(i+1))
         axes[i].set_xlabel(xlabel)
         axes[i].set_ylabel(ylabel)
-        axes[i].set_title(title+str(i+1))
+        axes[i].set_title(title)
+        axes[i].legend()
 
