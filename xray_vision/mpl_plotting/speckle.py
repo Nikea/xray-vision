@@ -63,41 +63,47 @@ def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
     ----------
     ax : list of Axes
         list of `Axes` objects to add the artist tool
-
     mean_intensity_sets : list
         Average intensities of each ROI as a list
         shape len(images_sets)
-
     index_list : list
         labels list for each image set
-
     title : str, optional
         title of the plot
-
     x_label : str, optional
         x axis label
-
     y_label : str, optional
         y axis label
+    
+    Returns
+    -------
+    artists : list of lists
+        List of lists of the line artists
 
     """
+    artists = []
     if np.all(map(lambda x: x == index_list[0], index_list)) is False:
         raise ValueError("Labels list for the image sets are different")
-    else:
-        ax[len(index_list[0])-1].set_xlabel(xlabel)
-        for i in range(len(index_list[0])):
-            ax[i].set_ylabel(ylabel)
-            ax[i].set_title(title+" for ROI " + str(i+1))
-            total = 0
-            first = 0
-            x = [len(elm) for elm in mean_intensity_sets]
-            x_val = np.arange(sum(x))
-            for j in range(len(mean_intensity_sets)):
-                total += x[j]
-                ax[i].plot(x_val[first:total], mean_intensity_sets[j][:, i],
-                           label=str(j+1)+" image_set")
-                first = total
-            ax[i].legend()
+    
+    ax[len(index_list[0])-1].set_xlabel(xlabel)
+    for i in range(len(index_list[0])):
+        ax[i].set_ylabel(ylabel)
+        ax[i].set_title(title+" for ROI " + str(i+1))
+        total = 0
+        first = 0
+        x = [len(elm) for elm in mean_intensity_sets]
+        x_val = np.arange(sum(x))
+        arts = []
+        for j in range(len(mean_intensity_sets)):
+            total += x[j]
+            art, = ax[i].plot(x_val[first:total], 
+                              mean_intensity_sets[j][:, i],
+                              label=str(j+1)+" image_set")
+            arts.append(art)
+            first = total
+        artists.append(arts)
+        ax[i].legend().draggable()
+    return arts
 
 
 def combine_intensity_plotter(ax, combine_intensity,
@@ -258,9 +264,10 @@ def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
 
     """
     num_rois = len(roi_pixel_data)
+    axes[0].set_title(title)
     for i in range(num_rois):
         axes[i].plot(roi_pixel_data[i], label=label+str(i+1))
         axes[i].set_xlabel(xlabel)
         axes[i].set_ylabel(ylabel)
-        axes[i].set_title(title)
         axes[i].legend()
+        
