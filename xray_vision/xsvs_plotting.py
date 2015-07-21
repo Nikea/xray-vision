@@ -240,7 +240,7 @@ def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
     ax : list of Axes
         list of `Axes` objects to add the artist tool
 
-    roi_pixel_data : dict
+    roi_pixel_data : list
         the intensities of the ROI"s of the labeled array according to the
         pixel list
 
@@ -257,11 +257,10 @@ def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
         legend label
 
     """
-    num_rois = len(roi_pixel_data.values())
+    num_rois = len(roi_pixel_data)
     for i in range(num_rois):
-        axes[i].plot(roi_pixel_data.values()[i], label=label+str(i+1))
+        axes[i].plot(roi_pixel_data[i], label=label+str(i+1))
         axes[i].set_xlabel(xlabel)
         axes[i].set_ylabel(ylabel)
         axes[i].set_title(title)
         axes[i].legend()
-
