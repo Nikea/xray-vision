@@ -246,41 +246,39 @@ def kymograph(ax, data, title="Kymograph", xlabel="Pixel",
     return im, cb
 
 
-def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
-                      xlabel='pixels', ylabel='Intensity', label="ROI "):
-    """
-    This will plot the intensities of the ROI's of the labeled array according
-    to the pixel list
+def plot_rois(ax, data, title='Intensities - ROI ', xlabel='pixels', ylabel='Intensity', 
+              label="ROI "):
+    """Plot each entry in 'data' in its own matplotlib line plot
 
     Parameters
     ----------
     ax : list of Axes
-        list of `Axes` objects to add the artist tool
-
-    roi_pixel_data : list
-        the intensities of the ROI"s of the labeled array according to the
-        pixel list
-
+        The matplotlib.axes.Axes objects in which to plot `data`
+    data : list
+        List of intensities. Each entry in the list should be a 1-D numpy array
     title : str, optional
-        title for the plot
-
+        Will be added above the top axes
     x_label : str, optional
-        x axis label
-
+        x axis label. Will be added to the bottom axes
     y_label : str, optional
-        y axis label
-
+        y axis label. Will be added to all axes
     label : str, optional
-        legend label
-
+        Prefix for the legend. Will be formatted as 'label #' where # is the index of 
+        the data list plus 1
+    
+    Returns
+    -------
+    arts : list
+        List of matplotlib.lines.Line2D objects that can be used for further manipulation 
+        of the plots
     """
-    num_rois = len(roi_pixel_data)
+    num_rois = len(data)
     # set the title on the first axes
-    axes[0].set_title(title)
-    labels = [label + str(i+1) for i in range(len(roi_pixel_data))]
+    ax[0].set_title(title)
+    labels = [label + str(i+1) for i in range(len(data))]
     # set the ylabels on all the axes
-    ylabels = [ylabel] * len(roi_pixel_data)
-    arts = multiline(axes, roi_pixel_data, labels, ylabels=ylabels)
+    ylabels = [ylabel] * len(data)
+    arts = multiline(ax, data, labels, ylabels=ylabels)
     # set the x axis on the last axes
-    axes[-1].set_xlabel(xlabel)
+    ax[-1].set_xlabel(xlabel)
     return arts
