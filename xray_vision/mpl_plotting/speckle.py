@@ -36,15 +36,14 @@
 # POSSIBILITY OF SUCH DAMAGE.                                          #
 ########################################################################
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function
 
 import six
-import logging
-from collections import deque
 import numpy as np
+import matplotlib.ticker as mticks
+import logging
 
-import matplotlib.pyplot as plt
+logger = logging.getLogger(__name__)
 
 """
     Plotting tools for X-Ray Speckle Visibility Spectroscopy(XSVS)
@@ -184,7 +183,7 @@ def circular_average_plotter(ax, image_data, ring_averages, bin_centers,
     if line_kw is None:
         line_kw = {}
 
-    im, = ax[0].imshow(image_data, **im_kw)
+    im = ax[0].imshow(image_data, **im_kw)
     ax[0].set_title(im_title)
 
     line, = ax[1].semilogy(bin_centers, ring_averages, **line_kw)
@@ -194,42 +193,56 @@ def circular_average_plotter(ax, image_data, ring_averages, bin_centers,
     
     return (im, line)
 
-def roi_kymograph_plotter(ax, kymograph_data, title="ROI Kymograph",
-                          fig_size=(8, 10), xlabel="pixels",
-                          ylabel="Frames", cmap='gist_earth'):
-    """
-    This will plot graphical representation of pixels variation over time
-    for required ROI.
+def kymograph(ax, kymograph_data, title="Kymograph", xlabel="Pixel", 
+              ylabel="Frame", fps=None, frame_offset=0, **im_kw):
+    """Plot the array of pixels (x) versus frame (y)
 
     Parameters
     ----------
     ax : Axes
-        The `Axes` object to add the artist tool
-
+        The matplotlib `Axes` object that the kymograph data should be added to
     kymograph_data : array
         data for graphical representation of pixels variation over time
         for required ROI
-
     title : str, optional
         title of the plot
-
-    fig_size : tuple, optional
-        figure size
-
     x_label : str, optional
         x axis label of the plot
-
     y_label : str, optional
         y axis label
-
     cmap : str, optional
         colormap for the data
-
+    fps : float, optional
+        Convert frame number to seconds and display time on the y-axis
+    frame_offset : int, optional
+        This is the frame number to start counting from
+    im_kw : dict
+        kwargs to be passed to matplotlib's imshow function
+    
+    Returns
+    -------
+    im : matplotlib.image.AxesImage
+        The return value from imshow. Can be used for further manipulation of
+        the image plot
     """
+    extent = list((0, kymograph_data.shape[1], 0, kymograph_data.shape[0]))
+    if fps is not None:
+        ylabel = 'Time (s)'
+        extent[2] = frame_offset / fps
+        extent[3] = extent[2] + kymograph_data.shape[0] / fps
+    im_kw['extent'] = extent
+    im = ax.imshow(kymograph_data, **im_kw)
+    # do the housekeeping
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
-    ax.imshow(kymograph_data, cmap=cmap)
+    ax.set_aspect('auto')
+    integer = False
+    if 'int' in arr.dtype.name:
+        # don't use float ticks if the data is integer typed
+        integer = True
+    cb = ax.figure.colorbar(im, ticks=mticks.MaxNLocator(integer=integer))
+    return im
 
 
 def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
@@ -267,4 +280,3 @@ def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
         axes[i].set_xlabel(xlabel)
         axes[i].set_ylabel(ylabel)
         axes[i].legend()
-        
