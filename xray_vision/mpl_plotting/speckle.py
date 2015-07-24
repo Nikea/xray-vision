@@ -98,8 +98,8 @@ def mean_intensity_plotter(ax, dataframe,
         for idx2, column_name in enumerate(dataframe):
             x = range(*offsets[idx2])
             y = row.ix[column_name]
-            artists[column_name][row_label] = ax[idx].plot(x, y,
-                                                           label=column_name)
+            art = ax[idx].plot(x, y, label=column_name)
+            artists[column_name][row_label] = art
         ax[idx].legend()
     return pd.DataFrame(artists)
 
