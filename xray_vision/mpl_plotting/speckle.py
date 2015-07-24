@@ -138,19 +138,17 @@ def combine_intensity_plotter(ax, combine_intensity,
     ax.legend()
 
 
-def circular_average_plotter(ax, image_data, ring_averages, bin_centers,
-                             im_title="Image Data", 
-                             line_title="Circular Average",
-                             line_xlabel="Bin Centers",
-                             line_ylabel="Ring Average", 
-                             im_kw=None, line_kw=None):
+def circular_average(ax, image_data, ring_averages, bin_centers,
+                     im_title="Image Data", line_title="Circular Average",
+                     line_xlabel="Bin Centers", line_ylabel="Ring Average", 
+                     im_kw=None, line_kw=None):
     """This will plot image data and circular average of the that image data
     
     Specific plot that was asked for by 11id at NSLS2.
     
     Parameters
     ----------
-    ax : tuple
+    ax : tuple, list, etc.
         Two axes. First is for displaying the image with imshow. Second is 
         for plotting the circular average with semilogy
     image_data : array
