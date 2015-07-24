@@ -42,12 +42,13 @@ import six
 import numpy as np
 import matplotlib.ticker as mticks
 from .utils import multiline
+import pandas as pd
 import logging
 logger = logging.getLogger(__name__)
 
 """
-    Plotting tools for X-Ray Speckle Visibility Spectroscopy(XSVS)
-    Analysis tools can be found at scikit-xray.speckle_analysis module
+Plotting tools for X-Ray Speckle Visibility Spectroscopy(XSVS)
+Correspondign analysis tools can be found in the skxray.core.speckle module
 """
 
 
@@ -75,31 +76,40 @@ def mean_intensity_plotter(ax, dataframe,
     Returns
     -------
     artists : pd.DataFrame
-        Pandas DataFrame whose dimensions match the input `dataframe`
+        Pandas DataFrame whose column/row names match the input `dataframe`
+    
+    Examples
+    --------
+    
     """
     # set the axis title
     ax[-1].set_xlabel(xlabel)
-    # capture the artists in a dictionary
+    # capture the artists in a nested dictionary
     artists = {col_name: {} for col_name in dataframe}
     # compute the offset for each column
     offsets = []
     cur = 0
     prev = 0
+    # determine how far to offset each data set
     for data in dataframe.ix[0]:
         cur = prev + len(data)
         offsets.append((prev, cur))
         prev = cur
-    print(offsets)
+    # loop over the rows of the dataframe
     for idx, row_label in enumerate(dataframe.index):
         # do some axes housekeeping
         ax[idx].set_ylabel(ylabel)
-        ax[idx].set_title(title + 'for %s' % row_label)
+        ax[idx].set_title(title + ' for %s' % row_label)
         row = dataframe.ix[row_label]
+        # loop over the columns of the dataframe, creating each line plot
+        # one at a time
         for idx2, column_name in enumerate(dataframe):
             x = range(*offsets[idx2])
             y = row.ix[column_name]
             art = ax[idx].plot(x, y, label=column_name)
+            # store the artists in a nested dictionary
             artists[column_name][row_label] = art
+        # enable the legend for each plot after all data has been added
         ax[idx].legend()
     return pd.DataFrame(artists)
 
