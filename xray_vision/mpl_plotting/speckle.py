@@ -197,6 +197,10 @@ def kymograph(ax, data, title="Kymograph", xlabel="Pixel",
               ylabel="Frame", fps=None, frame_offset=0, **im_kw):
     """Plot the array of pixels (x, col) versus frame (y, row[kymograph_datay])
 
+    Note that the pixels in the resulting plot will not necessarily be square. 
+    This is (1) legitimate because the x- and y-axes have different units and 
+    (2) beneficial because it maximizes the viewable space for this image
+
     Parameters
     ----------
     ax : Axes
