@@ -255,7 +255,9 @@ def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels',
     ax : list of Axes
         The matplotlib.axes.Axes objects in which to plot `data`
     data : list
-        List of intensities. Each entry in the list should be a 1-D numpy array
+        List of intensities. Each entry in the list should be a 1-D numpy array.
+        Any data that is not a 1-D numpy array will be `ravel`ed into a 1-D 
+        array
     title : str, optional
         Will be added above the top axes
     x_label : str, optional
@@ -278,6 +280,7 @@ def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels',
     labels = [label + str(i+1) for i in range(len(data))]
     # set the ylabels on all the axes
     ylabels = [ylabel] * len(data)
+    data = [d.ravel() for d in data]
     arts = multiline(ax, data, labels, ylabels=ylabels)
     # set the x axis on the last axes
     ax[-1].set_xlabel(xlabel)
