@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 """
 Plotting tools for X-Ray Speckle Visibility Spectroscopy(XSVS)
-Correspondign analysis tools can be found in the skxray.core.speckle module
+Corresponding analysis tools can be found in the `skxray.core.speckle` module
 """
 
 
