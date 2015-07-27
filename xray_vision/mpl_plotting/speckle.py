@@ -1,9 +1,6 @@
 # ######################################################################
-# Copyright (c) 2014, Brookhaven Science Associates, Brookhaven        #
+# Copyright (c) 2014-2015, Brookhaven Science Associates, Brookhaven   #
 # National Laboratory. All rights reserved.                            #
-#                                                                      #
-# Developed at the NSLS-II, Brookhaven National Laboratory             #
-# Developed by Sameera K. Abeykoon, April 2014                         #
 #                                                                      #
 # Redistribution and use in source and binary forms, with or without   #
 # modification, are permitted provided that the following conditions   #
