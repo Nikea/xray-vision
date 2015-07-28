@@ -115,7 +115,7 @@ def mean_intensity_plotter(ax, dataframe,
             dataframe, np.arange(0, 1, 1/len(row)))):
             x = range(*offsets[idx2])
             y = row.ix[column_name]
-            art = ax[idx].plot(x, y, label=column_name, color=cmap(color_idx))
+            art, = ax[idx].plot(x, y, label=column_name, color=cmap(color_idx))
             # store the artists in a nested dictionary
             artists[column_name][row_label] = art
         # enable the legend for each plot after all data has been added
