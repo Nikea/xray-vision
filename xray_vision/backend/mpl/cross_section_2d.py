@@ -268,9 +268,6 @@ class CrossSection(object):
         The figure object to build the class on, will clear
         current contents
 
-    init_image : 2d ndarray
-        The initial image
-
     cmap : str,  colormap, or None
         color map to use.  Defaults to gray
 
