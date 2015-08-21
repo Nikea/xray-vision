@@ -163,8 +163,6 @@ class CrossSection2DView(AbstractDataView2D, AbstractMPLDataView):
         fig : matplotlib.figure.Figure
             The figure object to build the class on, will clear
             current contents
-        init_image : 2d ndarray
-            The initial image
         cmap : str,  colormap, or None
            color map to use.  Defaults to gray
         clim_percentile : float or None
@@ -267,9 +265,6 @@ class CrossSection(object):
     fig : matplotlib.figure.Figure
         The figure object to build the class on, will clear
         current contents
-
-    init_image : 2d ndarray
-        The initial image
 
     cmap : str,  colormap, or None
         color map to use.  Defaults to gray
