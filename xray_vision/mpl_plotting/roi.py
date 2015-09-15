@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import copy
+import matplotlib.cm as mcm
 
 
 def show_label_array(ax, label_array, cmap=None, **kwargs):
