@@ -51,9 +51,9 @@ logger = logging.getLogger(__name__)
 """
 
 
-def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
+def mean_intensity_plotter(ax, dataframe,
                            title="Mean intensities", xlabel="Frames",
-                           ylabel="Mean Intensity", labels=None):
+                           ylabel="Mean Intensity"):
     """
     This will plot mean intensities for ROIS' of the labeled array
     for different image sets.
@@ -61,52 +61,47 @@ def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
     Parameters
     ----------
     ax : list of Axes
-        list of `Axes` objects to add the artist tool
-    mean_intensity_sets : list
-        Average intensities of each ROI as a list
-        shape len(images_sets)
-    index_list : list
-        labels list for each image set
+        List of `Axes` objects. Should have length == len(df)
+    dataframe : pd.Dataframe
+        The dataframe that has columns as different datasets (probably for
+        different locations in the same sample) and rows as ROIs
     title : str, optional
         title of the plot
     x_label : str, optional
         x axis label
     y_label : str, optional
         y axis label
-    labels : list, optional
-        List of labels for the image sets. If None, will default to
-        'image set #' where # is the index of the `mean_intensity_sets` list.
-        If a list is provided it should match the length of the
-        `mean_intensity_sets` list.
     
     Returns
     -------
-    artists : list of lists
-        List of lists of the line artists.
+    artists : pd.DataFrame
+        Pandas DataFrame whose dimensions match the input `dataframe`
     """
-    artists = []
-    if np.all(map(lambda x: x == index_list[0], index_list)) is False:
-        raise ValueError("Labels list for the image sets are different")
-    if labels is None:
-        label = ["image set " + str(j+1) for j in len(mean_intensity_sets)]
-    ax[len(index_list[0])-1].set_xlabel(xlabel)
-    for i in range(len(index_list[0])):
-        ax[i].set_ylabel(ylabel)
-        ax[i].set_title(title+" for ROI " + str(i+1))
-        total = 0
-        first = 0
-        x = [len(elm) for elm in mean_intensity_sets]
-        x_val = np.arange(sum(x))
-        arts = []
-        for j, label in enumerate(labels):
-            total += x[j]
-            art, = ax[i].plot(x_val[first:total], mean_intensity_sets[j][:, i],
-                              label=label)
-            arts.append(art)
-            first = total
-        artists.append(arts)
-        ax[i].legend().draggable()
-    return arts
+    # set the axis title
+    ax[-1].set_xlabel(xlabel)
+    # capture the artists in a dictionary
+    artists = {col_name: {} for col_name in dataframe}
+    # compute the offset for each column
+    offsets = []
+    cur = 0
+    prev = 0
+    for data in dataframe.ix[0]:
+        cur = prev + len(data)
+        offsets.append((prev, cur))
+        prev = cur
+    print(offsets)
+    for idx, row_label in enumerate(dataframe.index):
+        # do some axes housekeeping
+        ax[idx].set_ylabel(ylabel)
+        ax[idx].set_title(title + 'for %s' % row_label)
+        row = dataframe.ix[row_label]
+        for idx2, column_name in enumerate(dataframe):
+            x = range(*offsets[idx2])
+            y = row.ix[column_name]
+            artists[column_name][row_label] = ax[idx].plot(x, y,
+                                                           label=column_name)
+        ax[idx].legend()
+    return pd.DataFrame(artists)
 
 
 def combine_intensity_plotter(ax, combine_intensity,
