@@ -58,3 +58,8 @@ docs/_build/
 
 # Enaml stuff
 __enamlcache__
+
+.ipynb_checkpoints/
+
+# speckle data
+Duke_data/
