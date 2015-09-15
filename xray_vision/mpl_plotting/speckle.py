@@ -139,66 +139,63 @@ def combine_intensity_plotter(ax, combine_intensity,
     ax.legend()
 
 
-def circular_average_plotter(ax1, ax2, image_data, ring_averages, bin_centers,
-                             i_title="Image Data", c_title="Circular Average",
-                             cmap="gray", vmin=None, vmax=None, marker='o',
-                             line_color='blue', xlabel="Bin Centers",
-                             ylabel="Ring Average"):
-    """
-    This will plot image data and circular average of the that image data
-
+def circular_average_plotter(ax, image_data, ring_averages, bin_centers,
+                             im_title="Image Data", 
+                             line_title="Circular Average",
+                             line_xlabel="Bin Centers",
+                             line_ylabel="Ring Average", 
+                             im_kw=None, line_kw=None):
+    """This will plot image data and circular average of the that image data
+    
+    Specific plot that was asked for by 11id at NSLS2.
+    
     Parameters
     ----------
-    ax1 : Axes
-        The `Axes` object to add the artist tool
-
-    ax2 : Axes
-        The `Axes` object to add the artist tool
-
+    ax : tuple
+        Two axes. First is for displaying the image with imshow. Second is 
+        for plotting the circular average with semilogy
     image_data : array
-
     ring_averages : array
-
     bin_centers: array
-
-    i_title : str, optional
+    im_title : str, optional
         title for the image data
-
-    c_title : str, optional
+    line_title : str, optional
         title for the circular avergae of image data
-
-    cmap : str, optional
-        colormap for image data
-
-    vmin : float, optional
-        arguments specify the color limits
-
-    vmax : float, optional
-        arguments specify the color limits
-
-    marker : str, optional
-        line marker
-
-    line_color : str, optional
-        line color
-
-    x_label : str, optional
+    line_xlabel : str, optional
         x axis label for circular average plot
-
-    y_label : str, optional
+    line_ylabel : str, optional
         y axis label for circular average plot
+    im_kw : dict, optional
+        kwargs for the imshow axes
+    line_kw : dict, optional
+        kwargs for the semilogy axes
+    
+    Returns
+    -------
+    im : matplotlib.image.AxesImage
+        The return value from imshow. Can be used for further manipulation of
+        the image plot
+    line : matplotlib.lines.Line2D
+        The return value from semilogy. Can be used for further manipulation of
+        the semilogy plot
     """
-    ax1.imshow(image_data, cmap=cmap, vmin=vmin, vmax=vmax)
-    ax1.set_title(i_title)
+    if im_kw is None:
+        im_kw = {}
+    if line_kw is None:
+        line_kw = {}
 
-    ax2.semilogy(bin_centers, ring_averages, c=line_color, marker=marker)
-    ax2.set_title(c_title)
-    ax2.set_xlabel(xlabel)
-    ax2.set_ylabel(ylabel)
+    im, = ax[0].imshow(image_data, **im_kw)
+    ax[0].set_title(im_title)
 
+    line, = ax[1].semilogy(bin_centers, ring_averages, **line_kw)
+    ax[1].set_title(line_title)
+    ax[1].set_xlabel(line_xlabel)
+    ax[1].set_ylabel(line_ylabel)
+    
+    return (im, line)
 
 def roi_kymograph_plotter(ax, kymograph_data, title="ROI Kymograph",
-                          fig_size=(8, 10), xlabel="pixel list",
+                          fig_size=(8, 10), xlabel="pixels",
                           ylabel="Frames", cmap='gist_earth'):
     """
     This will plot graphical representation of pixels variation over time
@@ -236,7 +233,7 @@ def roi_kymograph_plotter(ax, kymograph_data, title="ROI Kymograph",
 
 
 def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
-                      xlabel='pixel list', ylabel='Intensity', label="ROI "):
+                      xlabel='pixels', ylabel='Intensity', label="ROI "):
     """
     This will plot the intensities of the ROI's of the labeled array according
     to the pixel list
