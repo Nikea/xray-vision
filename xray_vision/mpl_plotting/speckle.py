@@ -184,7 +184,7 @@ def circular_average(ax, image_data, ring_averages, bin_centers,
     im_title : str, optional
         title for the image data
     line_title : str, optional
-        title for the circular avergae of image data
+        title for the circular average of image data
     line_xlabel : str, optional
         x axis label for circular average plot
     line_ylabel : str, optional
