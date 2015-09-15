@@ -41,8 +41,8 @@ from __future__ import absolute_import, division, print_function
 import six
 import numpy as np
 import matplotlib.ticker as mticks
+from .utils import multiline
 import logging
-
 logger = logging.getLogger(__name__)
 
 """
@@ -193,17 +193,16 @@ def circular_average_plotter(ax, image_data, ring_averages, bin_centers,
     
     return (im, line)
 
-def kymograph(ax, kymograph_data, title="Kymograph", xlabel="Pixel", 
+def kymograph(ax, data, title="Kymograph", xlabel="Pixel", 
               ylabel="Frame", fps=None, frame_offset=0, **im_kw):
-    """Plot the array of pixels (x) versus frame (y)
+    """Plot the array of pixels (x, col) versus frame (y, row[kymograph_datay])
 
     Parameters
     ----------
     ax : Axes
         The matplotlib `Axes` object that the kymograph data should be added to
-    kymograph_data : array
+    data : array
         data for graphical representation of pixels variation over time
-        for required ROI
     title : str, optional
         title of the plot
     x_label : str, optional
@@ -224,25 +223,27 @@ def kymograph(ax, kymograph_data, title="Kymograph", xlabel="Pixel",
     im : matplotlib.image.AxesImage
         The return value from imshow. Can be used for further manipulation of
         the image plot
+    cb : matplotlib.colorbar.colorbar
+        The colorbar for the image
     """
-    extent = list((0, kymograph_data.shape[1], 0, kymograph_data.shape[0]))
+    extent = list((0, data.shape[1], 0, data.shape[0]))
     if fps is not None:
         ylabel = 'Time (s)'
         extent[2] = frame_offset / fps
-        extent[3] = extent[2] + kymograph_data.shape[0] / fps
+        extent[3] = extent[2] + data.shape[0] / fps
     im_kw['extent'] = extent
-    im = ax.imshow(kymograph_data, **im_kw)
+    im = ax.imshow(data, **im_kw)
     # do the housekeeping
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.set_aspect('auto')
     integer = False
-    if 'int' in arr.dtype.name:
+    if 'int' in data.dtype.name:
         # don't use float ticks if the data is integer typed
         integer = True
     cb = ax.figure.colorbar(im, ticks=mticks.MaxNLocator(integer=integer))
-    return im
+    return im, cb
 
 
 def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
@@ -274,9 +275,12 @@ def roi_pixel_plotter(axes, roi_pixel_data, title='Intensities - ROI ',
 
     """
     num_rois = len(roi_pixel_data)
+    # set the title on the first axes
     axes[0].set_title(title)
-    for i in range(num_rois):
-        axes[i].plot(roi_pixel_data[i], label=label+str(i+1))
-        axes[i].set_xlabel(xlabel)
-        axes[i].set_ylabel(ylabel)
-        axes[i].legend()
+    labels = [label + str(i+1) for i in range(len(roi_pixel_data))]
+    # set the ylabels on all the axes
+    ylabels = [ylabel] * len(roi_pixel_data)
+    arts = multiline(axes, roi_pixel_data, labels, ylabels=ylabels)
+    # set the x axis on the last axes
+    axes[-1].set_xlabel(xlabel)
+    return arts
