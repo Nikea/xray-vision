@@ -308,7 +308,7 @@ def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels',
     # set the title on the first axes
     ax[0].set_title(title)
     if labels is None:
-        labels = [label + str(i+1) for i in range(len(data))]
+        labels = ['ROI_' + str(i+1) for i in range(len(data))]
     # set the ylabels on all the axes
     ylabels = [ylabel] * len(data)
     data = [d.ravel() for d in data]
