@@ -278,7 +278,7 @@ def kymograph(ax, data, title="Kymograph", xlabel="Pixel",
 
 
 def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels',
-                  ylabel='Intensity', label="ROI "):
+                  ylabel='Intensity', labels=None):
     """Plot each entry in 'data' in its own matplotlib line plot
 
     Parameters
@@ -295,9 +295,8 @@ def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels',
         x axis label. Will be added to the bottom axes
     y_label : str, optional
         y axis label. Will be added to all axes
-    label : str, optional
-        Prefix for the legend. Will be formatted as 'label #' where # is the index of
-        the data list plus 1
+    labels : list, optional
+        labels for the legend. Should be the same length as `data`
     
     Returns
     -------
@@ -308,7 +307,8 @@ def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels',
     num_rois = len(data)
     # set the title on the first axes
     ax[0].set_title(title)
-    labels = [label + str(i+1) for i in range(len(data))]
+    if labels is None:
+        labels = [label + str(i+1) for i in range(len(data))]
     # set the ylabels on all the axes
     ylabels = [ylabel] * len(data)
     data = [d.ravel() for d in data]
