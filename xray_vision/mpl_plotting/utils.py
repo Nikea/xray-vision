@@ -9,14 +9,14 @@ def multiline(ax, data, labels, line_kw=None, xlabels=None, ylabels=None):
     ax : iterable
         List of mpl.Axes objects
     data : list
-        If the data is Nx1, the data will be treated as 'x'. If the data is 
+        If the data is Nx1, the data will be treated as 'x'. If the data is
         Nx2, the data will be treated as (x, y)
     labels : list
         Names of the data sets. These will appear as the legend in each plot
     line_kw : dict
         Dictionary of kwargs to be passed to **all** of the plotting functions.
     xlabels : iterable or string, optional
-        The name of the x axes. If an iterable is passed in, it should be the 
+        The name of the x axes. If an iterable is passed in, it should be the
         same length as `data`. If a string is passed in, it is assumed that all
         'data' should have the same `x` axis
     ylabels : iterable or string, optional
@@ -24,7 +24,7 @@ def multiline(ax, data, labels, line_kw=None, xlabels=None, ylabels=None):
     Returns
     -------
     arts : list
-        Dictionary of matplotlib.lines.Line2D objects. These objects can be 
+        Dictionary of matplotlib.lines.Line2D objects. These objects can be
         used for further manipulation of the plot
     """
     if line_kw is None:

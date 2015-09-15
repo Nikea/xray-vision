@@ -52,8 +52,8 @@ logger = logging.getLogger(__name__)
 
 
 def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
-                           title="Mean intensities",
-                           xlabel="Frames", ylabel="Mean Intensity"):
+                           title="Mean intensities", xlabel="Frames",
+                           ylabel="Mean Intensity", labels=None):
     """
     This will plot mean intensities for ROIS' of the labeled array
     for different image sets.
@@ -73,17 +73,22 @@ def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
         x axis label
     y_label : str, optional
         y axis label
+    labels : list, optional
+        List of labels for the image sets. If None, will default to
+        'image set #' where # is the index of the `mean_intensity_sets` list.
+        If a list is provided it should match the length of the
+        `mean_intensity_sets` list.
     
     Returns
     -------
     artists : list of lists
-        List of lists of the line artists
-
+        List of lists of the line artists.
     """
     artists = []
     if np.all(map(lambda x: x == index_list[0], index_list)) is False:
         raise ValueError("Labels list for the image sets are different")
-    
+    if labels is None:
+        label = ["image set " + str(j+1) for j in len(mean_intensity_sets)]
     ax[len(index_list[0])-1].set_xlabel(xlabel)
     for i in range(len(index_list[0])):
         ax[i].set_ylabel(ylabel)
@@ -93,11 +98,10 @@ def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
         x = [len(elm) for elm in mean_intensity_sets]
         x_val = np.arange(sum(x))
         arts = []
-        for j in range(len(mean_intensity_sets)):
+        for j, label in enumerate(labels):
             total += x[j]
-            art, = ax[i].plot(x_val[first:total], 
-                              mean_intensity_sets[j][:, i],
-                              label=str(j+1)+" image_set")
+            art, = ax[i].plot(x_val[first:total], mean_intensity_sets[j][:, i],
+                              label=label)
             arts.append(art)
             first = total
         artists.append(arts)
@@ -108,39 +112,48 @@ def mean_intensity_plotter(ax, mean_intensity_sets, index_list,
 def combine_intensity_plotter(ax, combine_intensity,
                               title="Mean Intensities - All Image Sets",
                               xlabel="Frames", ylabel="Mean Intensity",
-                              label=" ROI"):
+                              labels=None):
     """
     This will plot the combine intensities for all image sets
 
     Parameters
     ----------
     ax : Axes
-        The `Axes` object to add the artist tool
-
-    combine_intensity : array
-        combine intensities for each ROI from image data sets
-
+        The matplotlib.axes.Axes object to add the roi data to
+    combine_intensity : list
+        List of intensities for each ROI. Each element in the list should be
+        a 1-D array where the x-axis is understood to be frame number
     title : str, optional
         title of the plot
-
     x_label : str, optional
         x axis label
-
     y_label : str, optional
         y axis label
+    labels : list, optional
+        Names for each ROI data set. If a list is provided, it should be the
+        same length as the `combine_intensity` list. If a list is not provided,
+        the default will be 'ROI #' where # is the index of the dataset in
+        `combine_intensity`+1
     """
-    num_rois = combine_intensity.shape[1]
-    for i in range(num_rois):
-        ax.set_ylabel(ylabel)
-        ax.set_xlabel(xlabel)
-        ax.set_title(title)
-        ax.plot(combine_intensity[:, i], label=str(i+1)+label)
+    num_rois = len(combine_intensity)
+    if labels is None:
+        labels = ['ROI ' + str(i+1) for i in range(num_rois)]
+    # to utilize the multiline plotting function, we need to create a list of
+    # axes that are all the same axis
+    axes = [ax] * num_rois
+    arts = multiline(axes, combine_intensity, labels)
+    # do some housekeeping
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+    ax.set_title(title)
     ax.legend()
+    # return the artists
+    return arts
 
 
 def circular_average(ax, image_data, ring_averages, bin_centers,
                      im_title="Image Data", line_title="Circular Average",
-                     line_xlabel="Bin Centers", line_ylabel="Ring Average", 
+                     line_xlabel="Bin Centers", line_ylabel="Ring Average",
                      im_kw=None, line_kw=None):
     """This will plot image data and circular average of the that image data
     
@@ -149,7 +162,7 @@ def circular_average(ax, image_data, ring_averages, bin_centers,
     Parameters
     ----------
     ax : tuple, list, etc.
-        Two axes. First is for displaying the image with imshow. Second is 
+        Two axes. First is for displaying the image with imshow. Second is
         for plotting the circular average with semilogy
     image_data : array
     ring_averages : array
@@ -183,7 +196,8 @@ def circular_average(ax, image_data, ring_averages, bin_centers,
 
     im = ax[0].imshow(image_data, **im_kw)
     ax[0].set_title(im_title)
-
+    ax[0].figure.colorbar(im, ax=ax[0])
+    
     line, = ax[1].semilogy(bin_centers, ring_averages, **line_kw)
     ax[1].set_title(line_title)
     ax[1].set_xlabel(line_xlabel)
@@ -191,12 +205,13 @@ def circular_average(ax, image_data, ring_averages, bin_centers,
     
     return (im, line)
 
-def kymograph(ax, data, title="Kymograph", xlabel="Pixel", 
+
+def kymograph(ax, data, title="Kymograph", xlabel="Pixel",
               ylabel="Frame", fps=None, frame_offset=0, **im_kw):
     """Plot the array of pixels (x, col) versus frame (y, row[kymograph_datay])
 
-    Note that the pixels in the resulting plot will not necessarily be square. 
-    This is (1) legitimate because the x- and y-axes have different units and 
+    Note that the pixels in the resulting plot will not necessarily be square.
+    This is (1) legitimate because the x- and y-axes have different units and
     (2) beneficial because it maximizes the viewable space for this image
 
     Parameters
@@ -248,7 +263,7 @@ def kymograph(ax, data, title="Kymograph", xlabel="Pixel",
     return im, cb
 
 
-def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels', 
+def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels',
                   ylabel='Intensity', label="ROI "):
     """Plot each entry in 'data' in its own matplotlib line plot
 
@@ -258,7 +273,7 @@ def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels',
         The matplotlib.axes.Axes objects in which to plot `data`
     data : list
         List of intensities. Each entry in the list should be a 1-D numpy array.
-        Any data that is not a 1-D numpy array will be `ravel`ed into a 1-D 
+        Any data that is not a 1-D numpy array will be `ravel`ed into a 1-D
         array
     title : str, optional
         Will be added above the top axes
@@ -267,13 +282,13 @@ def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels',
     y_label : str, optional
         y axis label. Will be added to all axes
     label : str, optional
-        Prefix for the legend. Will be formatted as 'label #' where # is the index of 
+        Prefix for the legend. Will be formatted as 'label #' where # is the index of
         the data list plus 1
     
     Returns
     -------
     arts : list
-        List of matplotlib.lines.Line2D objects that can be used for further manipulation 
+        List of matplotlib.lines.Line2D objects that can be used for further manipulation
         of the plots
     """
     num_rois = len(data)
