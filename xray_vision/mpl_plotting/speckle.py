@@ -37,6 +37,7 @@ from __future__ import absolute_import, division, print_function
 
 import six
 import numpy as np
+import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
 from .utils import multiline
 import pandas as pd
@@ -51,7 +52,7 @@ Corresponding analysis tools can be found in the `skxray.core.speckle` module
 
 def mean_intensity_plotter(ax, dataframe,
                            title="Mean intensities", xlabel="Frames",
-                           ylabel="Mean Intensity"):
+                           ylabel="Mean Intensity", cmap=None):
     """
     This will plot mean intensities for ROIS' of the labeled array
     for different image sets.
@@ -69,6 +70,9 @@ def mean_intensity_plotter(ax, dataframe,
         x axis label
     y_label : str, optional
         y axis label
+    color_cycle : str
+        Matplotlib string name of colormap (see matplotlib.pyplot.colormaps()
+        for a list of valid colormaps on your machine)
     
     Returns
     -------
@@ -79,7 +83,14 @@ def mean_intensity_plotter(ax, dataframe,
     --------
     
     """
-    # set the axis title
+    if cmap is None:
+        # TODO don't use viridis in production, yet...
+        if 'viridis' in plt.colormaps():
+            cmap = 'viridis'
+        else:
+            cmap = 'rainbow'
+    cmap = plt.get_cmap(cmap)
+
     ax[-1].set_xlabel(xlabel)
     # capture the artists in a nested dictionary
     artists = {col_name: {} for col_name in dataframe}
@@ -100,10 +111,11 @@ def mean_intensity_plotter(ax, dataframe,
         row = dataframe.ix[row_label]
         # loop over the columns of the dataframe, creating each line plot
         # one at a time
-        for idx2, column_name in enumerate(dataframe):
+        for idx2, (column_name, color_idx) in enumerate(zip(
+            dataframe, np.arange(0, 1, 1/len(row)))):
             x = range(*offsets[idx2])
             y = row.ix[column_name]
-            art = ax[idx].plot(x, y, label=column_name)
+            art = ax[idx].plot(x, y, label=column_name, color=cmap(color_idx))
             # store the artists in a nested dictionary
             artists[column_name][row_label] = art
         # enable the legend for each plot after all data has been added
