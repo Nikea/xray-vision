@@ -246,8 +246,8 @@ def kymograph(ax, data, title="Kymograph", xlabel="Pixel",
     return im, cb
 
 
-def plot_rois(ax, data, title='Intensities - ROI ', xlabel='pixels', ylabel='Intensity', 
-              label="ROI "):
+def rois_as_lines(ax, data, title='Intensities - ROI ', xlabel='pixels', 
+                  ylabel='Intensity', label="ROI "):
     """Plot each entry in 'data' in its own matplotlib line plot
 
     Parameters

@@ -6,7 +6,7 @@ import numpy as np
 def test_roi_plotter():
     fix, ax = plt.subplots(nrows=2)
     data = [np.random.random((100)), np.random.random((200))]
-    speckle.plot_rois(ax, data)
+    speckle.rois_as_lines(ax, data)
 
 def test_kymograph_plotter():
     """Make sure that the tick formatter is floats/ints depending on input data
