@@ -45,12 +45,12 @@ def show_label_array(ax, label_array, cmap=None, **kwargs):
     return im
 
 
-def show_label_array_on_image(ax, image, label_array, cmap=None, vmax=None,
-                              **kwargs):
+def show_label_array_on_image(ax, image, label_array, cmap=None, **kwargs):
     """""
     This will plot the required ROI's(labeled array on the image
 
     Additional kwargs are passed through to `ax.imshow`.
+    If `vmin` is in kwargs, it is clipped to minimum of 0.5.
 
     Parameters
     ----------
@@ -67,7 +67,6 @@ def show_label_array_on_image(ax, image, label_array, cmap=None, vmax=None,
     cmap : str or colormap, optional
         Color map to use, defaults to 'Paired'
 
-
     Returns
     -------
     im : AxesImage
@@ -81,14 +80,11 @@ def show_label_array_on_image(ax, image, label_array, cmap=None, vmax=None,
 
     _cmap = copy.copy((mcm.get_cmap(cmap)))
     _cmap.set_under('w', 0)
-
-    if vmax is None:
-        vmax = np.percentile(image, [80, 100])
+    vmin = max(.5, kwargs.pop('vmin', .5))
 
     ax.set_aspect('equal')
-    im = ax.imshow(image, cmap='gray', interpolation='none', norm=LogNorm(),
-                   vmax=vmax, **kwargs)
-    im_label = ax.imshow(label_array, cmap=cmap,  interpolation='none',
+    im = ax.imshow(image, cmap='gray', interpolation='none', norm=LogNorm(), **kwargs)
+    im_label = ax.imshow(image*label_array, cmap=cmap,  interpolation='none',
                          norm=LogNorm(), **kwargs)
 
     return im, im_label
