@@ -29,6 +29,7 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
+cover/
 .tox/
 .coverage
 .cache
@@ -63,3 +64,5 @@ __enamlcache__
 
 # speckle data
 Duke_data/
+
+.DS_Store

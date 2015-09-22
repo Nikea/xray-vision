@@ -17,12 +17,15 @@ requirements:
     - numpy
     - six
     - matplotlib
+    - pandas
   run:
     - python
     - numpy
     - matplotlib
     - pyqt
     - six
+    - pandas
+    - lmfit == 0.8.3
 
 test:
   requires:
@@ -35,6 +38,13 @@ test:
     - xray_vision.messenger.mpl
     - xray_vision.backend
     - xray_vision.backend.mpl
+    - xray_vision.utils
+    - xray_vision.xrf
+    - xray_vision.xrf.model
+    - xray_vision.xrf.view
+    - xray_vision.mpl_plotting
+    - xray_vision.mpl_plotting
+    - xray_vision.mask
 
 
 about:

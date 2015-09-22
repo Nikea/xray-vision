@@ -16,7 +16,7 @@ install:
   - conda config --set always_yes true
   - conda update conda
   - conda create -n testenv pip nose python=$TRAVIS_PYTHON_VERSION numpy scipy=0.15.1 scikit-image six coverage pandas
-  - conda install -n testenv -c  xray-vision scikit-xray lmfit
+  - conda install -n testenv -c xray-vision scikit-xray lmfit
   - source activate testenv
   - python setup.py install
   - pip install coveralls
