@@ -45,7 +45,8 @@ def show_label_array(ax, label_array, cmap=None, **kwargs):
     return im
 
 
-def show_label_array_on_image(ax, image, label_array, cmap=None, **kwargs):
+def show_label_array_on_image(ax, image, label_array, cmap=None,
+                              norm=LogNorm(), **kwargs):
     """""
     This will plot the required ROI's(labeled array on the image
 
@@ -75,16 +76,9 @@ def show_label_array_on_image(ax, image, label_array, cmap=None, **kwargs):
     im_label : AxesImage
         The artist added to the axes
     """
-    if cmap is None:
-        cmap = 'Paired'
-
-    _cmap = copy.copy((mcm.get_cmap(cmap)))
-    _cmap.set_under('w', 0)
-    vmin = max(.5, kwargs.pop('vmin', .5))
-
     ax.set_aspect('equal')
-    im = ax.imshow(image, cmap='gray', interpolation='none', norm=LogNorm(), **kwargs)
-    im_label = ax.imshow(image*label_array, cmap=cmap,  interpolation='none',
-                         norm=LogNorm(), **kwargs)
-
+    im = ax.imshow(image, cmap='gray', interpolation='none', norm=norm,
+                   **kwargs)
+    im_label = show_label_array(ax, label_array, cmap=None, norm=norm,
+                                **kwargs)
     return im, im_label
