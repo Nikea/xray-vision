@@ -1,10 +1,12 @@
+import matplotlib
+matplotlib.use('Agg')
 from xray_vision.mpl_plotting import speckle
 from nose.tools import raises
 import matplotlib.pyplot as plt
 import numpy as np
 
 def test_roi_plotter():
-    fix, ax = plt.subplots(nrows=2)
+    fig, ax = plt.subplots(nrows=2)
     data = [np.random.random((100)), np.random.random((200))]
     speckle.rois_as_lines(ax, data)
 

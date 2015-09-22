@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 from xray_vision.mpl_plotting import utils
 from nose.tools import raises
 import matplotlib.pyplot as plt
