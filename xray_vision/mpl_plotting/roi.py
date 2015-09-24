@@ -47,7 +47,7 @@ def show_label_array(ax, label_array, cmap=None, **kwargs):
 
 def show_label_array_on_image(ax, image, label_array, cmap=None,
                               imshow_cmap='gray', norm=LogNorm(), **kwargs):
-    """""
+    """
     This will plot the required ROI's(labeled array) on the image
 
     Additional kwargs are passed through to `ax.imshow`.
