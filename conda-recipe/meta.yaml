@@ -14,16 +14,19 @@ requirements:
   build:
     - python
     - distribute
+    - setuptools
     - numpy
     - six
     - matplotlib
     - pandas
+    - scipy
   run:
     - python
     - numpy
     - matplotlib
     - pyqt
     - six
+    - scipy
     - pandas
     - lmfit == 0.8.3
 
@@ -32,6 +35,7 @@ test:
     - nose
 
   imports:
+    # import all sub-packages and modules
     - xray_vision
     - xray_vision.qt_widgets
     - xray_vision.messenger
