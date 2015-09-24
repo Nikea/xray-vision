@@ -46,9 +46,9 @@ def show_label_array(ax, label_array, cmap=None, **kwargs):
 
 
 def show_label_array_on_image(ax, image, label_array, cmap=None,
-                              norm=LogNorm(), **kwargs):
+                              imshow_cmap='gray', norm=LogNorm(), **kwargs):
     """""
-    This will plot the required ROI's(labeled array on the image
+    This will plot the required ROI's(labeled array) on the image
 
     Additional kwargs are passed through to `ax.imshow`.
     If `vmin` is in kwargs, it is clipped to minimum of 0.5.
@@ -66,7 +66,13 @@ def show_label_array_on_image(ax, image, label_array, cmap=None,
         positive integers label region of interest
 
     cmap : str or colormap, optional
-        Color map to use, defaults to 'Paired'
+        Color map to use for plotting the label_array, defaults to 'None'
+
+    imshow_cmap : str or colormap, optional
+        Color map to use for plotting the image, defaults to 'gray'
+
+    norm : str, optional
+        Normalize scale data, defaults to 'Lognorm()'
 
     Returns
     -------
@@ -77,8 +83,8 @@ def show_label_array_on_image(ax, image, label_array, cmap=None,
         The artist added to the axes
     """
     ax.set_aspect('equal')
-    im = ax.imshow(image, cmap='gray', interpolation='none', norm=norm,
+    im = ax.imshow(image, cmap=imshow_cmap, interpolation='none', norm=norm,
                    **kwargs)
-    im_label = show_label_array(ax, label_array, cmap=None, norm=norm,
+    im_label = show_label_array(ax, label_array, cmap=cmap, norm=norm,
                                 **kwargs)
     return im, im_label

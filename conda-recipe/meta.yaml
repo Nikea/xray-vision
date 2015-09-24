@@ -17,9 +17,6 @@ requirements:
     - setuptools
     - numpy
     - six
-    - matplotlib
-    - pandas
-    - scipy
   run:
     - python
     - numpy
