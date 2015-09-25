@@ -54,8 +54,8 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
-# Enaml stuff
-__enamlcache__
+# Anaconda?
+*.cfg
 
 .ipynb_checkpoints/
 
