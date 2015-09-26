@@ -1,0 +1,2 @@
+include versioneer.py
+include xray_vision/_version.py

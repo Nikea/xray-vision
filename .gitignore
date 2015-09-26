@@ -54,9 +54,6 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
-# Anaconda?
-*.cfg
-
 # Enaml stuff
 __enamlcache__
 
