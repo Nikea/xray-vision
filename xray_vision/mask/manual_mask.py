@@ -166,8 +166,8 @@ class ManualMask(object):
                                        norm=mask_norm,
                                        interpolation='nearest',
                                        origin=origin, extent=extent)
-        ax.set_title("'i': lasso, 't': pixel flip, alt inverts lasso, "
-                     "'r': reset mask, 'q': no tools")
+        ax.set_title("'i': lasso, 't': pixel flip, alt inverts lasso, \n "
+                     "'r': reset mask, 'q': no tools, 'z': undo last-drawn")
 
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
         self.points = np.transpose((x.ravel(), y.ravel()))
