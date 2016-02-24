@@ -53,15 +53,14 @@ from ..utils.mpl_helpers import ensure_ax_meth
 
 logger = logging.getLogger(__name__)
 
-
 class ManualMask(object):
     @ensure_ax_meth
     def __init__(self, ax, image, cmap='gray',
-                 norm=None, aspect=None,
-                 interpolation='nearest', alpha=None, vmin=None, vmax=None,
+                 norm=None, aspect=None, interpolation='nearest',
+                 alpha=None, vmin=None, vmax=None,
                  origin=None, extent=None, filternorm=1,
                  filterrad=4.0, resample=None, url=None,
-                 undo_history_depth=20, **kwargs):
+                 undo_history_depth=20, mask=None, **kwargs):
         """
         Use a GUI to specify region(s) of interest.
 
@@ -89,6 +88,9 @@ class ManualMask(object):
         undo_history_depth : int, optional
             The maximum number of frames to keep in the undo history
             Defaults to 20.
+        mask : array, optional
+            get an existing mask, boolean array
+            shape image shape
 
         Other Parameters
         ----------------
@@ -142,7 +144,11 @@ class ManualMask(object):
         self.canvas = ax.figure.canvas
         self.img_shape = image.shape
         self.data = image
-        self._mask = np.zeros(self.img_shape, dtype=bool)
+
+        if mask is None:
+            self._mask = np.zeros(self.img_shape, dtype=bool)
+        else:
+            self._mask = mask  # if there is an existing mask
 
         self.base_image = ax.imshow(self.data, zorder=1, cmap=cmap,
                                     norm=norm, aspect=aspect,
@@ -160,8 +166,8 @@ class ManualMask(object):
                                        norm=mask_norm,
                                        interpolation='nearest',
                                        origin=origin, extent=extent)
-        ax.set_title("'i': lasso, 't': pixel flip, alt inverts lasso, "
-                     "'r': reset mask, 'q': no tools")
+        ax.set_title("'i': lasso, 't': pixel flip, alt inverts lasso, \n "
+                     "'r': reset mask, 'q': no tools, 'z': undo last-drawn")
 
         y, x = np.mgrid[:image.shape[0], :image.shape[1]]
         self.points = np.transpose((x.ravel(), y.ravel()))
