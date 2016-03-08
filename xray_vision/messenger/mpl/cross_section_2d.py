@@ -504,8 +504,7 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
     def set_limits(self, bottom, top):
         # TODO update the spinners + validate
         limit_func = self._limit_factory((bottom, top))
-        self._spin_max.setValue(top)
-        self._spin_min.setValue(bottom)
+        self._set_spinbox_limits(bottom, top)
         self.sig_update_limit_function.emit(limit_func)
 
     def set_img_stack(self, img_stack):
