@@ -656,10 +656,11 @@ class CrossSection(object):
         self._ax_v.set_xlim(*vlim[::-1])
         self._ax_h.set_ylim(*vlim)
         # set the imshow data
-        self._im.set_data(self._imdata)
         self._im.set_cmap(self._cmap)
         self._im.set_norm(self._norm)
-
+        if self._imdata is None:
+            return
+        self._im.set_data(self._imdata)
         # TODO if cb_dirty, remake the colorbar, I think this is
         # why changing the norm does not play well
         self._dirty = False

@@ -38,7 +38,6 @@ from __future__ import (absolute_import, division, print_function,
 from .. import QtCore, QtGui
 from ..messenger.mpl.stack_1d import Stack1DMessenger
 from ..messenger.mpl.cross_section_2d import CrossSection2DMessenger
-
 import logging
 logger = logging.getLogger(__name__)
 
@@ -47,15 +46,40 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
     MainWindow
     """
 
-    def __init__(self, title=None, parent=None,
-                 data_list=None, key_list=None):
+    def __init__(self, data_list, key_list,
+                 title=None, parent=None, cmap=None,
+                 intensity_scaling='full range', img_min=None, img_max=None,
+                 norm='linear'):
+        """
+        Parameters
+        ----------
+        data_list : list
+            The list of data frames
+        key_list : list
+            The list of data frame names
+        title : str, optional
+            The title of the qt window that appears
+        parent : Qt, optional
+            The Qt parent for this main window
+        cmap : str, optional
+            Defaults to xray_vision.backend.mpl.AbstractMPLDataView._default_cmap
+        intensity_scaling : {'full range', 'absolute', 'percentile'}, optional
+            Defaults to 'full range'
+        img_min : number, optional
+            The min value for the image
+        img_max : number, optional
+            The max value for the image
+        norm : {'log', 'linear'}, optional
+            Defaults to linear
+
+        """
         QtGui.QMainWindow.__init__(self, parent)
         if title is None:
             title = "2D Cross Section"
         self.setWindowTitle(title)
         # create view widget, control widget and messenger pass-through
-        self._messenger = CrossSection2DMessenger(data_list=data_list,
-                                                  key_list=key_list)
+        self._messenger = CrossSection2DMessenger(
+            data_list=data_list, key_list=key_list)
 
         self._ctrl_widget = self._messenger._ctrl_widget
         self._display = self._messenger._display
@@ -65,6 +89,16 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
         self.setCentralWidget(self._display)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea,
                            self._ctrl_widget)
+        self._ctrl_widget.set_image_intensity_behavior(intensity_scaling)
+        if img_min is not None:
+            self._ctrl_widget.set_min_intensity_limit(img_min)
+        if img_max is not None:
+            self._ctrl_widget.set_max_intensity_limit(img_max)
+        self._ctrl_widget.set_normalization(norm)
+        if cmap is not None:
+            self._ctrl_widget.set_cmap(cmap)
+        # trigger the image to draw
+        self._messenger.sl_update_image(0)
 
 
 class Stack1DMainWindow(QtGui.QMainWindow):
