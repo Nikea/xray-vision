@@ -362,6 +362,18 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
 
     @QtCore.Slot(str)
     def set_image_intensity_behavior(self, im_behavior):
+        """Change the intensity scaling
+
+        Parameters
+        ----------
+        im_behavior : str
+            One of {' full range', 'percentile', 'absolute'}
+            'full range': Display the full intensity range of the image, from
+                          np.min(image) to np.max(image)
+            'percentile': Display the image with percentile values where
+                          0 == np.min(image) and 100 == np.max(image)
+            'absolute': Display the image with absolute intensity values.
+        """
         # get the limit factory to use
         (limit_fac, get_params) = self._intensity_behav_dict[str(im_behavior)]
         # stash the limit function factory for later use
@@ -492,6 +504,8 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
     def set_limits(self, bottom, top):
         # TODO update the spinners + validate
         limit_func = self._limit_factory((bottom, top))
+        self._spin_max.setValue(top)
+        self._spin_min.setValue(bottom)
         self.sig_update_limit_function.emit(limit_func)
 
     def set_img_stack(self, img_stack):
