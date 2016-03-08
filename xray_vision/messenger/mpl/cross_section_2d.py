@@ -304,9 +304,9 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
 
         # connect the intensity spinboxes to their updating method
         spin_min.valueChanged.connect(
-            self.set_min_intensity_limit)
+            self.sl_set_min_intensity_limit)
         spin_max.valueChanged.connect(
-            self.set_max_intensity_limit)
+            self.sl_set_max_intensity_limit)
         spin_step.valueChanged.connect(
             self.sl_set_intensity_step)
 
@@ -484,8 +484,28 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
             self._spin_min.setDecimals(num_decimals + 1)
             self._spin_max.setDecimals(num_decimals + 1)
 
-    @QtCore.Slot(float)
     def set_min_intensity_limit(self, min_intensity):
+        """Helper function to progamatically change the min intensity limit
+
+        Parameters
+        ----------
+        min_intensity : number
+            The new minimum intensity for the image
+        """
+        self._spim_min.setValue(min_intensity)
+
+    def set_max_intensity_limit(self, max_intensity):
+        """Helper function to progamatically change the max intensity limit
+
+        Parameters
+        ----------
+        max_intensity : number
+            The new maximum intensity for the image
+        """
+        self._spim_max.setValue(max_intensity)
+
+    @QtCore.Slot(float)
+    def sl_set_min_intensity_limit(self, min_intensity):
         # grab the max value
         max_intensity = self._spin_max.value()
         # grab the step value
@@ -503,7 +523,7 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
             self.sig_update_limit_function.emit(limit_func)
 
     @QtCore.Slot(float)
-    def set_max_intensity_limit(self, max_intensity):
+    def sl_set_max_intensity_limit(self, max_intensity):
         # grab the max value
         min_intensity = self._spin_min.value()
         # grab the step value
