@@ -95,7 +95,8 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
         if img_max is not None:
             self._ctrl_widget.set_max_intensity_limit(img_max)
         self._ctrl_widget.set_normalization(norm)
-        self._ctrl_widget.set_cmap(cmap)
+        if cmap is not None:
+            self._ctrl_widget.set_cmap(cmap)
         # trigger the image to draw
         self._messenger.sl_update_image(0)
 
