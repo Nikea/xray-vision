@@ -48,7 +48,6 @@ from .. import AbstractMessenger2D
 from ...backend.mpl.cross_section_2d import CrossSection2DView
 from ...backend.mpl import cross_section_2d as View
 from ...backend.mpl import AbstractMPLDataView
-import pdb
 import logging
 logger = logging.getLogger(__name__)
 
