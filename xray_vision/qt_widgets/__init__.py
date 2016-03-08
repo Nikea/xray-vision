@@ -55,7 +55,8 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
         self.setWindowTitle(title)
         # create view widget, control widget and messenger pass-through
         self._messenger = CrossSection2DMessenger(data_list=data_list,
-                                                  key_list=key_list, start_cmap=start_cmap)
+                                                  key_list=key_list,
+                                                  start_cmap=start_cmap)
 
         self._ctrl_widget = self._messenger._ctrl_widget
         self._display = self._messenger._display
