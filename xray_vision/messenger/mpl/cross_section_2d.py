@@ -491,7 +491,7 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
         min_intensity : number
             The new minimum intensity for the image
         """
-        self._spim_min.setValue(min_intensity)
+        self._spin_min.setValue(min_intensity)
 
     def set_max_intensity_limit(self, max_intensity):
         """Helper function to progamatically change the max intensity limit
@@ -501,7 +501,7 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
         max_intensity : number
             The new maximum intensity for the image
         """
-        self._spim_max.setValue(max_intensity)
+        self._spin_max.setValue(max_intensity)
 
     @QtCore.Slot(float)
     def sl_set_min_intensity_limit(self, min_intensity):
