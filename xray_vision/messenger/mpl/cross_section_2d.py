@@ -540,7 +540,6 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
             Any of the keys in self._CMAPS
         """
         self._cm_cb.setEditText(cmap)
-        # self._set_combobox_index_by_item_name(self._cm_cb, cmap)
 
     def set_normalization(self, norm_name):
         """Change the normalization
