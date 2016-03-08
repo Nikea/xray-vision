@@ -79,7 +79,7 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
         self.setWindowTitle(title)
         # create view widget, control widget and messenger pass-through
         self._messenger = CrossSection2DMessenger(
-            data_list=data_list, key_list=key_list, cmap=cmap)
+            data_list=data_list, key_list=key_list)
 
         self._ctrl_widget = self._messenger._ctrl_widget
         self._display = self._messenger._display
@@ -95,6 +95,10 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
         if img_max is not None:
             self._ctrl_widget.set_max_intensity_limit(img_max)
         self._ctrl_widget.set_normalization(norm)
+        if cmap is not None:
+            self._ctrl_widget.set_cmap(cmap)
+        # trigger the image to draw
+        self._messenger.sl_update_image(0)
 
 
 class Stack1DMainWindow(QtGui.QMainWindow):

@@ -38,8 +38,7 @@ import six
 
 from .. import QtCore, QtGui
 from matplotlib import colors
-from matplotlib.cm import datad
-
+from matplotlib.pyplot import colormaps
 
 import numpy as np
 
@@ -59,7 +58,7 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
     to pass commands down to the gui-independent layer
     """
 
-    def __init__(self, data_list, key_list, parent=None, cmap=None,
+    def __init__(self, data_list, key_list, parent=None,
                  *args, **kwargs):
         # call up the inheritance chain
         super(CrossSection2DMessenger, self).__init__(*args, **kwargs)
@@ -68,12 +67,9 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
                                         key_list=key_list)
 
         # TODO: Address issue of data storage in the cross section widget
-        self._ctrl_widget = CrossSection2DControlWidget(name="2-D CrossSection"
-                                                             " Controls",
-                                                        init_img=data_list[0],
-                                                        num_images=len(
-                                                            key_list),
-                                                        cmap=cmap)
+        self._ctrl_widget = CrossSection2DControlWidget(
+            name="2-D CrossSection Controls", init_img=data_list[0],
+            num_images=len(key_list))
         # connect signals to slots
         self.connect_sigs_to_slots()
 
@@ -138,14 +134,10 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
 
     # some defaults
 
-    _CMAPS = list(datad.keys())
-    _CMAPS.sort()
+    _CMAPS = colormaps()
 
-    def __init__(self, name, init_img, num_images, cmap=None):
-        if cmap is None:
-            self.default_cmap = AbstractMPLDataView._default_cmap
-        else:
-            self.default_cmap = cmap
+    def __init__(self, name, init_img, num_images):
+        self.default_cmap = AbstractMPLDataView._default_cmap
         QtGui.QDockWidget.__init__(self, name)
         # make the control widget float
         self.setFloating(True)
@@ -353,40 +345,10 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
         self._spin_img.setRange(self._slider_img.minimum(),
                                 self._slider_img.maximum())
 
-    def set_normalization(self, norm_name):
-        # Get the valid text items of the intensity combo box
-        options = [self._cmbbox_norm.itemText(i) for i in
-                   range(self._cmbbox_norm.count())]
-        new_index = options.index(norm_name)
-        # this should trigger the slot function `sl_set_normalization`
-        # to emit the norm change
-        self._cmbbox_norm.setCurrentIndex(new_index)
-
     @QtCore.Slot(str)
     def sl_set_normalization(self, norm_name):
-
         norm = self._norm_dict[str(norm_name)]
         self.sig_update_norm.emit(norm())
-
-    def set_image_intensity_behavior(self, im_behavior):
-        """Change the intensity scaling
-
-        Parameters
-        ----------
-        im_behavior : str
-            One of {' full range', 'percentile', 'absolute'}
-            'full range': Display the full intensity range of the image, from
-                          np.min(image) to np.max(image)
-            'percentile': Display the image with percentile values where
-                          0 == np.min(image) and 100 == np.max(image)
-            'absolute': Display the image with absolute intensity values.
-        """
-        # Get the valid text items of the intensity combo box
-        options = [self._cmbbox_intensity_behavior.itemText(i) for i in
-                   range(self._cmbbox_intensity_behavior.count())]
-        new_index = options.index(im_behavior)
-        # should trigger the `sl_set_image_intensity_behavior`
-        self._cmbbox_intensity_behavior.setCurrentIndex(new_index)
 
     @QtCore.Slot(str)
     def sl_set_image_intensity_behavior(self, im_behavior):
@@ -560,3 +522,46 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
     @QtCore.Slot(int)
     def update_frame(self, frame_idx):
         self.sig_update_image.emit(frame_idx)
+
+
+    def _set_combobox_index_by_item_name(self, combobox, item_name):
+        # Get the valid text items of the intensity combo box
+        options = [combobox.itemText(i) for i in range(combobox.count())]
+        # this should trigger a slot function to pass the change wherever it
+        # needs to go
+        combobox.setCurrentIndex(options.index(item_name))
+
+    def set_cmap(self, cmap):
+        """Change the cmap
+
+        Parameters
+        ----------
+        cmap : str
+            Any of the keys in self._CMAPS
+        """
+        self._cm_cb.setEditText(cmap)
+
+    def set_normalization(self, norm_name):
+        """Change the normalization
+
+        Parameters
+        ----------
+        norm_name : {'linear', 'log'}
+        """
+        self._set_combobox_index_by_item_name(self._cmbbox_norm, norm_name)
+
+    def set_image_intensity_behavior(self, im_behavior):
+        """Change the intensity scaling
+
+        Parameters
+        ----------
+        im_behavior : str
+            One of {'full range', 'percentile', 'absolute'}
+            'full range': Display the full intensity range of the image, from
+                          np.min(image) to np.max(image)
+            'percentile': Display the image with percentile values where
+                          0 == np.min(image) and 100 == np.max(image)
+            'absolute': Display the image with absolute intensity values.
+        """
+        self._set_combobox_index_by_item_name(self._cmbbox_intensity_behavior,
+                                              im_behavior)
