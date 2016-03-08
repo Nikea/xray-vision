@@ -75,7 +75,7 @@ def fullrange_limit_factory(limit_args=None):
            length 2 tuple to be passed to `im.clim(...)` to
            set the color limits of a ColorMappable object.
         """
-        return (np.min(im), np.max(im))
+        return (np.nanmin(im), np.nanmax(im))
 
     return _full_range
 
@@ -250,6 +250,7 @@ def auto_redraw(func):
     return inner
 
 
+
 class CrossSection(object):
     """
     Class to manage the axes, artists and properties associated with
@@ -378,12 +379,12 @@ class CrossSection(object):
 
         # create line artists
         self._ln_v, = self._ax_v.plot([],
-                                      [], 'k-',
+                                      [], 'ko',
                                       animated=True,
                                       visible=False)
 
         self._ln_h, = self._ax_h.plot([],
-                                      [], 'k-',
+                                      [], 'ko',
                                       animated=True,
                                       visible=False)
 
@@ -649,6 +650,7 @@ class CrossSection(object):
         # axes of the parasite axes
         # value_limits
         vlim = self._limit_func(self._imdata)
+        print('vlim: {}'.format(vlim))
         # set the color bar limits
         self._im.set_clim(vlim)
         self._norm.vmin, self._norm.vmax = vlim
@@ -676,3 +678,40 @@ class CrossSection(object):
     @auto_redraw
     def autoscale_vertical(self, enable):
         self._ax_v.autoscale(enable=False)
+
+
+class CSOverlay(CrossSection):
+    channels = ['red', 'green', 'blue']
+    def __init__(self, *args, **kwargs):
+        super(CSOverlay, self).__init__(*args, **kwargs)
+        self._im_overlay = self._im_ax.imshow(
+            [[]], zorder=self._im.zorder+1, interpolation=self._interpolation,
+            aspect='equal')
+
+    @auto_redraw
+    def update_overlay(self, image):
+        """
+        Parameters
+        ----------
+        image : np.ndarray
+            shape = [self._im_data.shape[0]][self._im_data.shape[0]][4]
+            0 <= values <= 1
+        """
+        self._im_overlay.set_data(image)
+
+    @auto_redraw
+    def _init_artists(self, init_image):
+        super(CSOverlay, self)._init_artists(init_image)
+        im_shape = init_image.shape
+        self._im_overlay.set_extent([-0.5, im_shape[1] + .5,
+                                     im_shape[0] + .5, -0.5])
+
+    def update_image(self, image):
+        """
+        Set the image data
+
+        The input data does not necessarily have to be the same shape as the
+        original image
+        """''
+        # call the parent function
+        super(CSOverlay, self).update_image(image)
