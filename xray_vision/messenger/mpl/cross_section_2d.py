@@ -60,7 +60,7 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
     to pass commands down to the gui-independent layer
     """
 
-    def __init__(self, data_list, key_list, parent=None, start_cmap=None,
+    def __init__(self, data_list, key_list, parent=None, cmap=None,
                  *args, **kwargs):
         # call up the inheritance chain
         super(CrossSection2DMessenger, self).__init__(*args, **kwargs)
@@ -74,7 +74,7 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
                                                         init_img=data_list[0],
                                                         num_images=len(
                                                             key_list),
-                                                        start_cmap=start_cmap)
+                                                        cmap=cmap)
         # connect signals to slots
         self.connect_sigs_to_slots()
 
@@ -142,11 +142,11 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
     _CMAPS = list(datad.keys())
     _CMAPS.sort()
 
-    def __init__(self, name, init_img, num_images, start_cmap=None):
-        if start_cmap is None:
+    def __init__(self, name, init_img, num_images, cmap=None):
+        if cmap is None:
             self.default_cmap = AbstractMPLDataView._default_cmap
         else:
-            self.default_cmap = start_cmap
+            self.default_cmap = cmap
         QtGui.QDockWidget.__init__(self, name)
         # make the control widget float
         self.setFloating(True)

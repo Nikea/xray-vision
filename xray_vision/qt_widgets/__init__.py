@@ -48,7 +48,7 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
     """
 
     def __init__(self, title=None, parent=None,
-                 data_list=None, key_list=None, start_cmap=None):
+                 data_list=None, key_list=None, cmap=None):
         QtGui.QMainWindow.__init__(self, parent)
         if title is None:
             title = "2D Cross Section"
@@ -56,7 +56,7 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
         # create view widget, control widget and messenger pass-through
         self._messenger = CrossSection2DMessenger(data_list=data_list,
                                                   key_list=key_list,
-                                                  start_cmap=start_cmap)
+                                                  cmap=cmap)
 
         self._ctrl_widget = self._messenger._ctrl_widget
         self._display = self._messenger._display
