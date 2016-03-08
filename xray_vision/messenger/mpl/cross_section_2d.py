@@ -48,7 +48,7 @@ from .. import AbstractMessenger2D
 from ...backend.mpl.cross_section_2d import CrossSection2DView
 from ...backend.mpl import cross_section_2d as View
 from ...backend.mpl import AbstractMPLDataView
-
+import pdb
 import logging
 logger = logging.getLogger(__name__)
 
@@ -212,7 +212,6 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
         self._limit_factory = View.fullrange_limit_factory
         self._cmbbox_intensity_behavior = QtGui.QComboBox(parent=self)
         self._cmbbox_intensity_behavior.addItems(intensity_behavior_types)
-
         # can add PowerNorm, BoundaryNorm, but those require extra inputs
         norm_names = ['linear', 'log']
         norm_funcs = [colors.Normalize, colors.LogNorm]
@@ -260,7 +259,7 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
 
         # set this down here to make sure the function will run
         self._cmbbox_intensity_behavior.currentIndexChanged[str].connect(
-            self.set_image_intensity_behavior)
+            self.sl_set_image_intensity_behavior)
         # set to full range, do this last so all the call-back propagate
         self._cmbbox_intensity_behavior.setCurrentIndex(0)
         # force the issue about emitting
@@ -269,7 +268,7 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
 
         # set this down here to make sure the function will run
         self._cmbbox_norm.currentIndexChanged[str].connect(
-            self.set_normalization)
+            self.sl_set_normalization)
         # set to full range, do this last so all the call-back propagate
         self._cmbbox_norm.setCurrentIndex(0)
         # force the issue about emitting
@@ -305,11 +304,11 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
 
         # connect the intensity spinboxes to their updating method
         spin_min.valueChanged.connect(
-            self.set_min_intensity_limit)
+            self.sl_set_min_intensity_limit)
         spin_max.valueChanged.connect(
-            self.set_max_intensity_limit)
+            self.sl_set_max_intensity_limit)
         spin_step.valueChanged.connect(
-            self.set_intensity_step)
+            self.sl_set_intensity_step)
 
         # set the initial values for the spin boxes
         spin_step.setValue((max_intensity-min_intensity)/100)
@@ -355,13 +354,44 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
         self._spin_img.setRange(self._slider_img.minimum(),
                                 self._slider_img.maximum())
 
-    @QtCore.Slot(str)
     def set_normalization(self, norm_name):
+        # Get the valid text items of the intensity combo box
+        options = [self._cmbbox_norm.itemText(i) for i in
+                   range(self._cmbbox_norm.count())]
+        new_index = options.index(norm_name)
+        # this should trigger the slot function `sl_set_normalization`
+        # to emit the norm change
+        self._cmbbox_norm.setCurrentIndex(new_index)
+
+    @QtCore.Slot(str)
+    def sl_set_normalization(self, norm_name):
+
         norm = self._norm_dict[str(norm_name)]
         self.sig_update_norm.emit(norm())
 
-    @QtCore.Slot(str)
     def set_image_intensity_behavior(self, im_behavior):
+        """Change the intensity scaling
+
+        Parameters
+        ----------
+        im_behavior : str
+            One of {' full range', 'percentile', 'absolute'}
+            'full range': Display the full intensity range of the image, from
+                          np.min(image) to np.max(image)
+            'percentile': Display the image with percentile values where
+                          0 == np.min(image) and 100 == np.max(image)
+            'absolute': Display the image with absolute intensity values.
+        """
+        # Get the valid text items of the intensity combo box
+        options = [self._cmbbox_intensity_behavior.itemText(i) for i in
+                   range(self._cmbbox_intensity_behavior.count())]
+        new_index = options.index(im_behavior)
+        # should trigger the `sl_set_image_intensity_behavior`
+        self._cmbbox_intensity_behavior.setCurrentIndex(new_index)
+
+    @QtCore.Slot(str)
+    def sl_set_image_intensity_behavior(self, im_behavior):
+
         # get the limit factory to use
         (limit_fac, get_params) = self._intensity_behav_dict[str(im_behavior)]
         # stash the limit function factory for later use
@@ -433,7 +463,7 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
             [sb.blockSignals(state) for sb, state in reset_state]
 
     @QtCore.Slot(float)
-    def set_intensity_step(self, intensity_step):
+    def sl_set_intensity_step(self, intensity_step):
         """
         Slot method for the intensity step spinbox valueChanged() method.
         The intensity_step is passed as a string which needs to be parsed into
@@ -454,8 +484,28 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
             self._spin_min.setDecimals(num_decimals + 1)
             self._spin_max.setDecimals(num_decimals + 1)
 
-    @QtCore.Slot(float)
     def set_min_intensity_limit(self, min_intensity):
+        """Helper function to progamatically change the min intensity limit
+
+        Parameters
+        ----------
+        min_intensity : number
+            The new minimum intensity for the image
+        """
+        self._spim_min.setValue(min_intensity)
+
+    def set_max_intensity_limit(self, max_intensity):
+        """Helper function to progamatically change the max intensity limit
+
+        Parameters
+        ----------
+        max_intensity : number
+            The new maximum intensity for the image
+        """
+        self._spim_max.setValue(max_intensity)
+
+    @QtCore.Slot(float)
+    def sl_set_min_intensity_limit(self, min_intensity):
         # grab the max value
         max_intensity = self._spin_max.value()
         # grab the step value
@@ -473,7 +523,7 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
             self.sig_update_limit_function.emit(limit_func)
 
     @QtCore.Slot(float)
-    def set_max_intensity_limit(self, max_intensity):
+    def sl_set_max_intensity_limit(self, max_intensity):
         # grab the max value
         min_intensity = self._spin_min.value()
         # grab the step value
@@ -488,10 +538,10 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
             limit_func = self._limit_factory((min_intensity, max_intensity))
             self.sig_update_limit_function.emit(limit_func)
 
-    @QtCore.Slot(float, float)
     def set_limits(self, bottom, top):
         # TODO update the spinners + validate
         limit_func = self._limit_factory((bottom, top))
+        self._set_spinbox_limits(bottom, top)
         self.sig_update_limit_function.emit(limit_func)
 
     def set_img_stack(self, img_stack):
