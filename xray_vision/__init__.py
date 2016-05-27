@@ -35,8 +35,14 @@
 # imports to smooth over differences between PyQt4, PyQt5, PyQt4.1 and PySides
 
 import sip
-sip.setapi('QString', 2)
 import matplotlib
+import logging
+from logging import NullHandler
+from ._version import get_versions
+
+sip.setapi('QString', 2)
+
+old = matplotlib.rcParams["backend"]
 matplotlib.rcParams["backend"] = "Qt4Agg"
 
 # use the PySide rcParams if that's your preference
@@ -47,16 +53,18 @@ if usePyQt4:
     # QDateTime.toPython = QDateTime.toPyDateTime
 else:
     matplotlib.rcParams["backend.qt4"] = "PySide"
+
 try:
     from matplotlib.backends.qt_compat import QtCore, QtGui
 except ImportError:
     from matplotlib.backends.qt4_compat import QtCore, QtGui
-import logging
+matplotlib.rcParams["backend"] = old
+
 logger = logging.getLogger(__name__)
 
-from logging import NullHandler
+
 logger.addHandler(NullHandler())
 
-from ._version import get_versions
+
 __version__ = get_versions()['version']
 del get_versions
