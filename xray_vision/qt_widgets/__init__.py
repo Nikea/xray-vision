@@ -41,6 +41,7 @@ from ..messenger.mpl.cross_section_2d import CrossSection2DMessenger
 import logging
 logger = logging.getLogger(__name__)
 
+
 class CrossSectionMainWindow(QtGui.QMainWindow):
     """
     MainWindow
@@ -99,6 +100,17 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
             self._ctrl_widget.set_cmap(cmap)
         # trigger the image to draw
         self._messenger.sl_update_image(0)
+
+        self.key_list = key_list
+
+        def add_data(self, new_data, new_key_names):
+            old_length = len(self.key_list)
+            for key in new_key_names:
+                self.key_list.append(key)
+            for i in range(old_length, len(self.key_list)):
+                self._messenger._view._data_dict[self.key_list[i]] = new_data[i-old_length]
+            self._messenger._ctrl_widget._slider_img.setMaximum(len(self.key_list)-1)
+            self._messenger._ctrl_widget._spin_img.setMaximum(len(self.key_list)-1)
 
 
 class Stack1DMainWindow(QtGui.QMainWindow):
