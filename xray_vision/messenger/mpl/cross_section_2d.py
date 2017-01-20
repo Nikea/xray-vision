@@ -36,7 +36,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import six
 
-from .. import QtCore, QtGui
+from .. import QtCore, QtGui, QtWidgets
 from matplotlib import colors
 from matplotlib.pyplot import colormaps
 
@@ -121,7 +121,7 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
         self.sl_update_view()
 
 
-class CrossSection2DControlWidget(QtGui.QDockWidget):
+class CrossSection2DControlWidget(QtWidgets.QDockWidget):
     """
     This object contains the CrossSectionViewer (2D Image Display) and
     finish the doc string...
@@ -138,16 +138,16 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
 
     def __init__(self, name, init_img, num_images):
         self.default_cmap = AbstractMPLDataView._default_cmap
-        QtGui.QDockWidget.__init__(self, name)
+        QtWidgets.QDockWidget.__init__(self, name)
         # make the control widget float
         self.setFloating(True)
 
         # add a widget that lives in the floating control widget
-        self._widget = QtGui.QWidget(self)
+        self._widget = QtWidgets.QWidget(self)
         # give the widget to the dock widget
         self.setWidget(self._widget)
         # create a layout
-        ctrl_layout = QtGui.QVBoxLayout()
+        ctrl_layout = QtWidgets.QVBoxLayout()
         # set the layout to the widget
         self._widget.setLayout(ctrl_layout)
 
@@ -156,33 +156,33 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
         self._hi = np.max(init_img)
 
         # set up axis swap buttons
-        self._cb_ax1 = QtGui.QComboBox(parent=self)
-        self._cb_ax2 = QtGui.QComboBox(parent=self)
-        self._btn_swap = QtGui.QPushButton('Swap Axes', parent=self)
+        self._cb_ax1 = QtWidgets.QComboBox(parent=self)
+        self._cb_ax2 = QtWidgets.QComboBox(parent=self)
+        self._btn_swap = QtWidgets.QPushButton('Swap Axes', parent=self)
         self.init_swap_btns(self._cb_ax1, self._cb_ax2, self._btn_swap)
 
         # set up slider and spinbox
-        self._slider_img = QtGui.QSlider(parent=self)
-        self._spin_img = QtGui.QSpinBox(parent=self)
+        self._slider_img = QtWidgets.QSlider(parent=self)
+        self._spin_img = QtWidgets.QSpinBox(parent=self)
         # init the slider and spinbox
         self.init_img_changer(self._slider_img, self._spin_img, num_images)
 
-        widget_box1 = QtGui.QVBoxLayout()
-        slider_label = QtGui.QLabel("&Frame")
+        widget_box1 = QtWidgets.QVBoxLayout()
+        slider_label = QtWidgets.QLabel("&Frame")
         slider_label.setBuddy(self._slider_img)
 
-        widget_box1_hbox = QtGui.QHBoxLayout()
+        widget_box1_hbox = QtWidgets.QHBoxLayout()
         widget_box1_hbox.addWidget(self._slider_img)
         widget_box1_hbox.addWidget(self._spin_img)
         widget_box1.addWidget(slider_label)
         widget_box1.addLayout(widget_box1_hbox)
 
         # set up color map combo box
-        self._cm_cb = QtGui.QComboBox(parent=self)
+        self._cm_cb = QtWidgets.QComboBox(parent=self)
         self.init_cmap_box(self._cm_cb)
 
         # set up the interpolation combo box
-        self._cmb_interp = QtGui.QComboBox(parent=self)
+        self._cmb_interp = QtWidgets.QComboBox(parent=self)
         self._cmb_interp.addItems(CrossSection2DView.interpolation)
 
         # set up intensity manipulation combo box
@@ -201,33 +201,33 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
         # TODO should not have to hard-code this, but it is getting
         # called before it is fully updated, figure out why
         self._limit_factory = View.fullrange_limit_factory
-        self._cmbbox_intensity_behavior = QtGui.QComboBox(parent=self)
+        self._cmbbox_intensity_behavior = QtWidgets.QComboBox(parent=self)
         self._cmbbox_intensity_behavior.addItems(intensity_behavior_types)
         # can add PowerNorm, BoundaryNorm, but those require extra inputs
         norm_names = ['linear', 'log']
         norm_funcs = [colors.Normalize, colors.LogNorm]
         self._norm_dict = {k: v for k, v in zip(norm_names, norm_funcs)}
-        self._cmbbox_norm = QtGui.QComboBox(parent=self)
+        self._cmbbox_norm = QtWidgets.QComboBox(parent=self)
         self._cmbbox_norm.addItems(norm_names)
 
         # set up intensity manipulation spin boxes
         # create the intensity manipulation spin boxes
-        self._spin_min = QtGui.QDoubleSpinBox(parent=self)
-        self._spin_max = QtGui.QDoubleSpinBox(parent=self)
-        self._spin_step = QtGui.QDoubleSpinBox(parent=self)
+        self._spin_min = QtWidgets.QDoubleSpinBox(parent=self)
+        self._spin_max = QtWidgets.QDoubleSpinBox(parent=self)
+        self._spin_step = QtWidgets.QDoubleSpinBox(parent=self)
         self.init_spinners(self._spin_min, self._spin_max, self._spin_step,
                            min_intensity=np.min(init_img),
                            max_intensity=np.max(init_img))
 
-        ctrl_form = QtGui.QFormLayout()
+        ctrl_form = QtWidgets.QFormLayout()
         ctrl_form.addRow("Color &map", self._cm_cb)
         ctrl_form.addRow("&Interpolation", self._cmb_interp)
         ctrl_form.addRow("&Normalization", self._cmbbox_norm)
         ctrl_form.addRow("limit &strategy", self._cmbbox_intensity_behavior)
         ctrl_layout.addLayout(ctrl_form)
 
-        clim_spinners = QtGui.QGroupBox("clim parameters")
-        ispiner_form = QtGui.QFormLayout()
+        clim_spinners = QtWidgets.QGroupBox("clim parameters")
+        ispiner_form = QtWidgets.QFormLayout()
         ispiner_form.addRow("mi&n", self._spin_min)
         ispiner_form.addRow("ma&x", self._spin_max)
         ispiner_form.addRow("s&tep", self._spin_step)
@@ -235,13 +235,13 @@ class CrossSection2DControlWidget(QtGui.QDockWidget):
         ctrl_layout.addWidget(clim_spinners)
 
         # construct widget box 1
-        widget_box1_sub1 = QtGui.QVBoxLayout()
-        axes_swap_form = QtGui.QFormLayout()
+        widget_box1_sub1 = QtWidgets.QVBoxLayout()
+        axes_swap_form = QtWidgets.QFormLayout()
         axes_swap_form.addRow("axes A", self._cb_ax1)
         axes_swap_form.addRow("axes B", self._cb_ax2)
         widget_box1_sub1.addLayout(axes_swap_form)
         widget_box1_sub1.addWidget(self._btn_swap)
-        swap_axes_box = QtGui.QGroupBox("Swap!")
+        swap_axes_box = QtWidgets.QGroupBox("Swap!")
         swap_axes_box.setLayout(widget_box1_sub1)
         swap_axes_box.setEnabled(False)
         ctrl_layout.addWidget(swap_axes_box)
