@@ -87,7 +87,7 @@ class AbstractMPLMessenger(AbstractMessenger):
     @QtCore.Slot()
     def sl_update_view(self):
         self._view.replot()
-        self._view._fig.canvas.draw()
+        self._view._fig.canvas.draw_idle()
 
 
 class MPLDisplayWidget(AbstractDisplayWidget):
@@ -122,4 +122,4 @@ class MPLDisplayWidget(AbstractDisplayWidget):
         self.setLayout(layout)
 
     def draw(self):
-        self._fig.canvas.draw()
+        self._fig.canvas.draw_idle()

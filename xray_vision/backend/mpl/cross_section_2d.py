@@ -472,7 +472,7 @@ class CrossSection(object):
         self._clear_cid = self._fig.canvas.mpl_connect('draw_event',
                                                        self._clear)
         self._fig.tight_layout()
-        self._fig.canvas.draw()
+        self._fig.canvas.draw_idle()
 
     def _disconnect_callbacks(self):
         """
@@ -667,7 +667,7 @@ class CrossSection(object):
         self._cb_dirty = False
 
     def _draw(self):
-        self._fig.canvas.draw()
+        self._fig.canvas.draw_idle()
 
     @auto_redraw
     def autoscale_horizontal(self, enable):

@@ -232,4 +232,4 @@ class Stack1DView(AbstractDataView1D, AbstractMPLDataView):
         # call the replot function
         self.replot()
         # redraw the canvas
-        self._fig.canvas.draw()
+        self._fig.canvas.draw_idle()

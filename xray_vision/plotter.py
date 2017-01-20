@@ -147,4 +147,4 @@ class CDIPlotter(object):
             self.line3, = self.ax3.plot(sup_error)
         finally:
             for fig in self.figures:
-                fig.canvas.draw()
+                fig.canvas.draw_idle()
