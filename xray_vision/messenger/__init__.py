@@ -36,7 +36,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from .. import QtCore, QtGui
+from .. import QtCore, QtGui, QtWidgets
 
 # other relevant imports
 
@@ -179,7 +179,7 @@ class AbstractMessenger2D(AbstractMessenger):
                                axis_list=axis_list,
                                append_to_end_list=append_to_end_list)
         self.sl_update_plot()
-        
+
     @QtCore.Slot(list, list, list, list)
     def sl_add_datum(self, lbl_list, x_list, y_list, val_list):
         """
@@ -206,7 +206,7 @@ class AbstractMessenger2D(AbstractMessenger):
         self.sl_update_plot()
 
 
-class AbstractDisplayWidget(QtGui.QWidget):
+class AbstractDisplayWidget(QtWidgets.QWidget):
     """
     AbstractDisplayWidget class docstring.
     The purpose of this class and its daughter classes is simply to render the

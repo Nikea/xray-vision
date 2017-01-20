@@ -100,4 +100,4 @@ class AbstractMPLDataView(object):
         self._norm = norm
 
     def draw(self):
-        self._fig.canvas.draw()
+        self._fig.canvas.draw_idle()
