@@ -37,7 +37,7 @@ from __future__ import (absolute_import, division, print_function,
 import six
 from collections import defaultdict
 from .util import mapping_mixin
-from .. import QtCore, QtGui
+from .. import QtCore, QtWidgets
 
 import logging
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ _defaults = {
 }
 
 
-class UtilsWidget(QtGui.QWidget):
+class UtilsWidget(QtWidgets.QWidget):
     """
     `UtilsWidget` has a `QHBoxLayout`, an en/disable checkbox and a label
     with hover text.  Daughter classes of `UtilsWidget` just need to
@@ -62,17 +62,17 @@ class UtilsWidget(QtGui.QWidget):
         if hover_text is None:
             hover_text = label_text
         # make the label
-        self._lab = QtGui.QLabel(label_text)
+        self._lab = QtWidgets.QLabel(label_text)
         # set the text to display on mouse cursor hover
         self._lab.setToolTip(hover_text)
 
         # make layout
-        self._layout = QtGui.QHBoxLayout()
+        self._layout = QtWidgets.QHBoxLayout()
 
         # make the check box if it is needed
         self._has_check_box = has_check_box
         if self._has_check_box:
-            self._check_box = QtGui.QCheckBox()
+            self._check_box = QtWidgets.QCheckBox()
             self._check_box.setToolTip(_defaults["check_box_hover_text"])
             self._check_box.setChecked(_defaults["check_box_state"])
             # todo disable input when the check_box is not checked
@@ -99,7 +99,7 @@ class Slider(UtilsWidget):
                                      has_check_box=has_check_box)
 
         # set up slider
-        self._slider = QtGui.QSlider(parent=self)
+        self._slider = QtWidgets.QSlider(parent=self)
         self._slider.setRange(min_v, max_v)
         self._slider.setTracking(tracking)
         self._slider.setSingleStep(1)
@@ -111,7 +111,7 @@ class Slider(UtilsWidget):
         self._label.setBuddy(self._slider)
 
         # and its spin box
-        self._spinbox = QtGui.QSpinBox(parent=self)
+        self._spinbox = QtWidgets.QSpinBox(parent=self)
         self._spinbox.setRange(self._slider.minimum(), self._slider.maximum())
         self._spinbox.valueChanged.connect(self._slider.setValue)
         self._slider.valueChanged.connect(self._spinbox.setValue)
@@ -142,7 +142,7 @@ class DateTimeBox(UtilsWidget):
                                           hover_text=hover_text,
                                           has_check_box=has_check_box)
         # make the date time box
-        self._datetime = QtGui.QDateTimeEdit(QtCore.QDate.currentDate())
+        self._datetime = QtWidgets.QDateTimeEdit(QtCore.QDate.currentDate())
         self._datetime.setCalendarPopup(True)
         self._datetime.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
         # buddy them up
@@ -195,7 +195,7 @@ class ComboBox(UtilsWidget):
                                        hover_text=hover_text,
                                        has_check_box=has_check_box)
         # make the cb
-        self._cb = QtGui.QComboBox()
+        self._cb = QtWidgets.QComboBox()
         self._cb.setEditable(editable)
         # stash the text
         self._list_of_strings = list_of_strings
@@ -249,7 +249,7 @@ class LineEdit(UtilsWidget):
                                        hover_text=hover_text,
                                        has_check_box=has_check_box)
         # make the line edit box
-        self._line_editor = QtGui.QLineEdit()
+        self._line_editor = QtWidgets.QLineEdit()
         # buddy them up
         self._lab.setBuddy(self._line_editor)
         # add the line edit widget to the layout
@@ -319,7 +319,7 @@ class CheckBox(UtilsWidget):
                                        hover_text=hover_text,
                                        has_check_box=has_check_box)
         # make the check box
-        self._check = QtGui.QCheckBox()
+        self._check = QtWidgets.QCheckBox()
         # buddy them up
         self._lab.setBuddy(self._check)
 
@@ -338,7 +338,7 @@ class CheckBox(UtilsWidget):
         return None
 
 
-class TripleSpinner(QtGui.QGroupBox):
+class TripleSpinner(QtWidgets.QGroupBox):
     """
     A class to wrap up the logic for dealing with a min/max/step
     triple spin box.
@@ -348,13 +348,13 @@ class TripleSpinner(QtGui.QGroupBox):
     valueChanged = QtCore.Signal(float, float)
 
     def __init__(self, title='', parent=None):
-        QtGui.QGroupBox.__init__(self, title, parent=parent)
+        QtWidgets.QGroupBox.__init__(self, title, parent=parent)
 
-        self._spinbox_min_intensity = QtGui.QDoubleSpinBox(parent=self)
-        self._spinbox_max_intensity = QtGui.QDoubleSpinBox(parent=self)
-        self._spinbox_intensity_step = QtGui.QDoubleSpinBox(parent=self)
+        self._spinbox_min_intensity = QtWidgets.QDoubleSpinBox(parent=self)
+        self._spinbox_max_intensity = QtWidgets.QDoubleSpinBox(parent=self)
+        self._spinbox_intensity_step = QtWidgets.QDoubleSpinBox(parent=self)
 
-        ispiner_form = QtGui.QFormLayout()
+        ispiner_form = QtWidgets.QFormLayout()
         ispiner_form.addRow("min", self._spinbox_min_intensity)
         ispiner_form.addRow("max", self._spinbox_max_intensity)
         ispiner_form.addRow("step", self._spinbox_intensity_step)
@@ -386,29 +386,29 @@ class TripleSpinner(QtGui.QGroupBox):
                 self._spinbox_max_intensity.value)
 
 
-class PairSpinner(QtGui.QGroupBox):
+class PairSpinner(QtWidgets.QGroupBox):
     valueChanged = QtCore.Signal(float)
     rangeChanged = QtCore.Signal(float, float)
 
     def __init__(self, init_min, init_max,
                  init_step, parent=None, title='',
                  value_str=None, step_str=None):
-        QtGui.QGroupBox.__init__(self, title, parent=parent)
+        QtWidgets.QGroupBox.__init__(self, title, parent=parent)
 
         if value_str is None:
             value_str = 'value'
         if step_str is None:
             step_str = 'step'
 
-        self._spinbox_value = QtGui.QDoubleSpinBox(parent=self)
-        self._spinbox_step = QtGui.QDoubleSpinBox(parent=self)
+        self._spinbox_value = QtWidgets.QDoubleSpinBox(parent=self)
+        self._spinbox_step = QtWidgets.QDoubleSpinBox(parent=self)
         self._spinbox_step.valueChanged.connect(
             self._spinbox_value.setSingleStep)
 
         self._spinbox_value.valueChanged.connect(
             self.valueChanged)
 
-        ispiner_form = QtGui.QFormLayout()
+        ispiner_form = QtWidgets.QFormLayout()
         ispiner_form.addRow(value_str, self._spinbox_value)
         ispiner_form.addRow(step_str, self._spinbox_step)
         self.setLayout(ispiner_form)
@@ -426,7 +426,7 @@ class PairSpinner(QtGui.QGroupBox):
         self.rangeChanged.emit(new_min, new_max)
 
 
-class ControlContainer(QtGui.QGroupBox, mapping_mixin):
+class ControlContainer(QtWidgets.QGroupBox, mapping_mixin):
     _delim = '.'
     _dispatch_map = {'slider': 'create_slider'}
 
@@ -445,7 +445,7 @@ class ControlContainer(QtGui.QGroupBox, mapping_mixin):
 
     def __init__(self, title, parent=None):
         # call parent constructor
-        QtGui.QGroupBox.__init__(self, title, parent=parent)
+        QtWidgets.QGroupBox.__init__(self, title, parent=parent)
 
         # nested containers
         self._containers = dict()
@@ -458,7 +458,7 @@ class ControlContainer(QtGui.QGroupBox, mapping_mixin):
         self._by_type = defaultdict(dict)
 
         # make the layout
-        self._layout = QtGui.QVBoxLayout()
+        self._layout = QtWidgets.QVBoxLayout()
         # add it to self
         self.setLayout(self._layout)
 
@@ -534,7 +534,7 @@ class ControlContainer(QtGui.QGroupBox, mapping_mixin):
         Create and add a text label to the control panel
         """
         # create text
-        tmp_label = QtGui.QLabel(text)
+        tmp_label = QtWidgets.QLabel(text)
         self._add_widget(key, tmp_label)
 
     def create_radiobuttons(self, key):
@@ -625,7 +625,7 @@ class ControlContainer(QtGui.QGroupBox, mapping_mixin):
         self._layout.addStretch()
 
 
-class DictDisplay(QtGui.QGroupBox):
+class DictDisplay(QtWidgets.QGroupBox):
     """
     A generic widget for displaying dictionaries
 
@@ -642,12 +642,12 @@ class DictDisplay(QtGui.QGroupBox):
     """
     def __init__(self, title, ignore_list=None, parent=None):
         # pass up the stack, GroupBox takes care of the title
-        QtGui.QGroupBox.__init__(self, title, parent=parent)
+        QtWidgets.QGroupBox.__init__(self, title, parent=parent)
 
         if ignore_list is None:
             ignore_list = ()
         # make layout
-        self.full_layout = QtGui.QVBoxLayout()
+        self.full_layout = QtWidgets.QVBoxLayout()
         # set layout
         self.setLayout(self.full_layout)
         # make a set of the ignore list
@@ -693,14 +693,14 @@ class DictDisplay(QtGui.QGroupBox):
            The value
         """
         # make a widget for our row
-        tmp_widget = QtGui.QWidget(self)
-        tmp_layout = QtGui.QHBoxLayout()
+        tmp_widget = QtWidgets.QWidget(self)
+        tmp_layout = QtWidgets.QHBoxLayout()
         tmp_widget.setLayout(tmp_layout)
 
         # add the key and value to the row widget
-        tmp_layout.addWidget(QtGui.QLabel(str(k) + ':'))
+        tmp_layout.addWidget(QtWidgets.QLabel(str(k) + ':'))
         tmp_layout.addStretch()
-        tmp_layout.addWidget(QtGui.QLabel(str(v)))
+        tmp_layout.addWidget(QtWidgets.QLabel(str(v)))
 
         # add the row widget to the full layout
         self.full_layout.addWidget(tmp_widget)

@@ -36,7 +36,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from .. import QtCore, QtGui
+from .. import QtCore, QtGui, QtWidgets
 
 # other relevant imports
 
@@ -206,7 +206,7 @@ class AbstractMessenger2D(AbstractMessenger):
         self.sl_update_plot()
 
 
-class AbstractDisplayWidget(QtGui.QWidget):
+class AbstractDisplayWidget(QtWidgets.QWidget):
     """
     AbstractDisplayWidget class docstring.
     The purpose of this class and its daughter classes is simply to render the
