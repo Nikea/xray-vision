@@ -35,13 +35,13 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from .. import QtCore, QtGui
+from .. import QtCore, QtWidgets
 from ..messenger.mpl.stack_1d import Stack1DMessenger
 from ..messenger.mpl.cross_section_2d import CrossSection2DMessenger
 import logging
 logger = logging.getLogger(__name__)
 
-class CrossSectionMainWindow(QtGui.QMainWindow):
+class CrossSectionMainWindow(QtWidgets.QMainWindow):
     """
     MainWindow
     """
@@ -73,7 +73,7 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
             Defaults to linear
 
         """
-        QtGui.QMainWindow.__init__(self, parent)
+        QtWidgets.QMainWindow.__init__(self, parent)
         if title is None:
             title = "2D Cross Section"
         self.setWindowTitle(title)
@@ -101,14 +101,14 @@ class CrossSectionMainWindow(QtGui.QMainWindow):
         self._messenger.sl_update_image(0)
 
 
-class Stack1DMainWindow(QtGui.QMainWindow):
+class Stack1DMainWindow(QtWidgets.QMainWindow):
     """
     MainWindow
     """
 
     def __init__(self, title=None, parent=None,
                  data_list=None, key_list=None):
-        QtGui.QMainWindow.__init__(self, parent)
+        QtWidgets.QMainWindow.__init__(self, parent)
         if title is None:
             title = "1D Stack"
         self.setWindowTitle(title)
@@ -118,7 +118,7 @@ class Stack1DMainWindow(QtGui.QMainWindow):
 
         self._ctrl_widget = self._messenger._ctrl_widget
         self._display = self._messenger._display
-        dock_widget = QtGui.QDockWidget()
+        dock_widget = QtWidgets.QDockWidget()
         dock_widget.setWidget(self._ctrl_widget)
         # finish the init
         self._display.setFocus()
