@@ -1,6 +1,6 @@
 matplotlib
 numpy
 pandas
-pyqt
+pyqt5
 scipy
 six
