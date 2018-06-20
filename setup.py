@@ -11,6 +11,8 @@ except ImportError:
 import setuptools
 import versioneer
 
+with open('requirements.txt') as f:
+    requirements = f.read().split()
 
 setup(
     name='xray-vision',
@@ -18,4 +20,5 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     author='Brookhaven National Lab',
     packages=setuptools.find_packages(),
+    install_requires=requirements,
 )
