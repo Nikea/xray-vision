@@ -1,0 +1,6 @@
+matplotlib
+numpy
+pandas
+pyqt5
+scipy
+six
