@@ -21,7 +21,7 @@ setup(
     name='xray-vision',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    author='Brookhaven National Lab',
+    author='Brookhaven National Laboratory',
     description='Visualization widgets and plotting helpers targeted at X-Ray Sciences',
     long_description=long_description,
     long_description_content_type='text/markdown',
