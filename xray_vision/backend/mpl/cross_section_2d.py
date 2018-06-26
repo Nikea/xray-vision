@@ -278,6 +278,22 @@ class CrossSection(object):
     interpolation : str, optional
         Interpolation method to use. List of valid options can be found in
         CrossSection2DView.interpolation
+    vert_loc : str, optional
+        set to 'left' by default, can specify 'right' to move the verical
+        axis to the right side of the image
+    horiz_loc : str, optional
+        set to 'top' by default, can specify 'bottom' to move the horizontal
+        axis below the image
+    title : str, optional
+        title for the figure
+    vert_label : str, optional
+        label that describes the x axis of the vertical plot
+    horiz_label : str, optional
+        label that describes the x axis of the horizontal plot
+    extent_labels : list, optional
+        [x value initial, x value final, y value initial, y value final]
+        sets values for the axis labels on horizontal and
+        vertical plots
 
     Properties
     ----------
@@ -291,9 +307,26 @@ class CrossSection(object):
 
     """
     def __init__(self, fig, cmap=None, norm=None,
-                 limit_func=None, auto_redraw=True, interpolation=None):
+                 limit_func=None, auto_redraw=True, interpolation=None,
+                 vert_loc=None, horiz_loc=None, title=None,
+                 vert_label=None, horiz_label=None, extent_labels=None):
 
         self._cursor_position_cbs = []
+        self.title = title
+        self.vert_label = vert_label
+        self.horiz_label = horiz_label
+        self.extent_labels = extent_labels
+        if extent_labels is not None:
+            self.x_tick_values = np.linspace(int(self.extent_labels[0]),
+                                             int(self.extent_labels[1]), 5)
+            self.y_tick_values = np.linspace(int(extent_labels[2]),
+                                             int(extent_labels[3]), 5)
+        if vert_loc is None:
+            vert_loc = 'left'
+        if horiz_loc is None:
+            horiz_loc = 'top'
+        self.horiz_loc = horiz_loc
+        self.vert_loc = vert_loc
         if interpolation is None:
             interpolation = _INTERPOLATION[0]
         self._interpolation = interpolation
@@ -325,9 +358,9 @@ class CrossSection(object):
         fig.clf()
         # Configure the figure in our own image
         #
-        #     	  +----------------------+
-        #	      |   H cross section    |
-        #     	  +----------------------+
+        #         +----------------------+
+        #         |   H cross section    |
+        #         +----------------------+
         #   +---+ +----------------------+
         #   | V | |                      |
         #   |   | |                      |
@@ -357,15 +390,49 @@ class CrossSection(object):
 
         # set up all the other axes
         # (set up the horizontal and vertical cuts)
-        self._ax_h = divider.append_axes('top', .5, pad=0.1,
-                                         sharex=self._im_ax)
-        self._ax_h.yaxis.set_major_locator(LinearLocator(numticks=2))
-        self._ax_v = divider.append_axes('left', .5, pad=0.1,
-                                         sharey=self._im_ax)
+
+        # Orientation types and changing plots based on arguments
+        enum_left_right = {'left': True, 'right': False}
+
+        kwargs_vert = {'position': self.vert_loc, 'size': .5, 'pad': 0.1}
+        kwargs_horiz = {'position': self.horiz_loc, 'size': .5, 'pad': 0.3}
+        if self.extent_labels is None:
+            kwargs_vert['sharey'] = self._im_ax
+            kwargs_horiz['sharex'] = self._im_ax
+        self._ax_v = divider.append_axes(**kwargs_vert)
+        self._ax_h = divider.append_axes(**kwargs_horiz)
+
+        if self.vert_loc is 'right':
+            self._ax_v.yaxis.tick_right()
+
+        if self.vert_label is not None:
+            kwargs = {'ylabel': self.vert_label}
+            if self.vert_loc is 'right':
+                if self.extent_labels is None:
+                    kwargs['labelpad'] = -60
+                else:
+                    kwargs['labelpad'] = -85
+            self._ax_v.set_ylabel(**kwargs)
+
+        if self.horiz_label is not None:
+            kwargs = {'xlabel': self.horiz_label}
+            if self.horiz_loc is 'top':
+                kwargs['labelpad'] = -70
+            self._ax_h.set_xlabel(**kwargs)
+
         self._ax_v.xaxis.set_major_locator(LinearLocator(numticks=2))
-        self._ax_cb = divider.append_axes('right', .2, pad=.5)
-        # add the color bar
+        self._ax_h.yaxis.set_major_locator(LinearLocator(numticks=2))
+
+        self._ax_cb = divider.append_axes(
+            _swap_sides(self.vert_loc,enum_left_right), .2, pad=.5)
+
+        if self.title is not None:
+            self._ax_h.set_title(self.title, pad=50)
+
+        # colorbar
         self._cb = fig.colorbar(self._im, cax=self._ax_cb)
+        if self.horiz_loc is 'bottom' and self.vert_loc is 'left':
+            self._ax_h.yaxis.tick_right()
 
         # add the cursor place holder
         self._cur = None
@@ -471,7 +538,9 @@ class CrossSection(object):
 
         self._clear_cid = self._fig.canvas.mpl_connect('draw_event',
                                                        self._clear)
-        self._fig.tight_layout()
+        if self.vert_label is None and self.horiz_label is None \
+                and self.extent_labels is None:
+            self._fig.tight_layout()
         self._fig.canvas.draw()
 
     def _disconnect_callbacks(self):
@@ -522,10 +591,16 @@ class CrossSection(object):
         # update the extent of the image artist
         self._im.set_extent([-0.5, im_shape[1] + .5,
                              im_shape[0] + .5, -0.5])
-
         # update the limits of the image axes to match the exent
         self._im_ax.set_xlim([-.05, im_shape[1] + .5])
         self._im_ax.set_ylim([im_shape[0] + .5, -0.5])
+
+        if self.extent_labels is not None:
+            self._ax_h.set_xticks(np.linspace(0, im_shape[1], 5))
+            self._ax_h.set_xticklabels(self.x_tick_values)
+
+            self._ax_v.set_yticks(np.linspace(0, im_shape[0], 5))
+            self._ax_v.set_yticklabels(self.y_tick_values)
 
         # update the format coords printer
         numrows, numcols = im_shape
@@ -539,9 +614,20 @@ class CrossSection(object):
             if col >= 0 and col < numcols and row >= 0 and row < numrows:
                 # if it does, grab the value
                 z = self._imdata[row, col]
-                return "X: {x:d} Y: {y:d} I: {i:.2f}".format(x=col, y=row, i=z)
+                if self.extent_labels is not None:
+                    return "X: {x:g} Y: {y:g} I: {i:g}".format(
+                    x=col / im_shape[1] * (self.extent_labels[1] -
+                                           self.extent_labels[0]) +
+                      self.extent_labels[0],
+                    y=row / im_shape[0] * (self.extent_labels[2] -
+                                           self.extent_labels[3]) +
+                      self.extent_labels[3],
+                    i=z)
+                else:
+                    return "X: {x:d} Y: {y:d} I: {i:.2f}".format(x=col, y=row,
+                                                                 i=z)
             else:
-                return "X: {x:d} Y: {y:d}".format(x=col, y=row)
+                return ""
 
         # replace the current format_coord function
         self._im_ax.format_coord = format_coord
@@ -676,3 +762,12 @@ class CrossSection(object):
     @auto_redraw
     def autoscale_vertical(self, enable):
         self._ax_v.autoscale(enable=False)
+
+
+def _swap_sides(key, enum):
+    assert len(enum) == 2, 'The enum dict should contain 2 key-value pairs'
+    reverse_enum = {v: k for k, v in enum.items()}
+    try:
+        return reverse_enum[not enum[key]]
+    except Exception:
+        return reverse_enum[True]
