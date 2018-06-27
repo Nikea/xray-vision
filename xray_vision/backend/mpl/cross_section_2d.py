@@ -321,9 +321,9 @@ class CrossSection(object):
                                              int(self.extent_labels[1]), 5)
             self.y_tick_values = np.linspace(int(extent_labels[2]),
                                              int(extent_labels[3]), 5)
-        if vert_loc is None:
+        if vert_loc is None or vert_loc is not 'right':
             vert_loc = 'left'
-        if horiz_loc is None:
+        if horiz_loc is None or horiz_loc is not 'bottom':
             horiz_loc = 'top'
         self.horiz_loc = horiz_loc
         self.vert_loc = vert_loc
@@ -411,7 +411,7 @@ class CrossSection(object):
                 if self.extent_labels is None:
                     kwargs['labelpad'] = -60
                 else:
-                    kwargs['labelpad'] = -85
+                    kwargs['labelpad'] = -80
             self._ax_v.set_ylabel(**kwargs)
 
         if self.horiz_label is not None:
@@ -427,7 +427,10 @@ class CrossSection(object):
             _swap_sides(self.vert_loc,enum_left_right), .2, pad=.5)
 
         if self.title is not None:
-            self._ax_h.set_title(self.title, pad=50)
+            if self.horiz_loc is 'top':
+                self._ax_h.set_title(self.title, pad=50)
+            else:
+                self._im_ax.set_title(self.title)
 
         # colorbar
         self._cb = fig.colorbar(self._im, cax=self._ax_cb)
