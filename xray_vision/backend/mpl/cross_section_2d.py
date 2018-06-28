@@ -395,10 +395,16 @@ class CrossSection(object):
         enum_left_right = {'left': True, 'right': False}
 
         kwargs_vert = {'position': self.vert_loc, 'size': .5, 'pad': 0.1}
-        kwargs_horiz = {'position': self.horiz_loc, 'size': .5, 'pad': 0.3}
+        kwargs_horiz = {'position': self.horiz_loc, 'size': .5}
         if self.extent_labels is None:
             kwargs_vert['sharey'] = self._im_ax
+            if self.horiz_loc is 'top':
+                kwargs_horiz['pad'] = 0.1
+            else:
+                kwargs_horiz['pad'] = 0.25
             kwargs_horiz['sharex'] = self._im_ax
+        else:
+            kwargs_horiz['pad'] = 0.25
         self._ax_v = divider.append_axes(**kwargs_vert)
         self._ax_h = divider.append_axes(**kwargs_horiz)
 
@@ -417,7 +423,10 @@ class CrossSection(object):
         if self.horiz_label is not None:
             kwargs = {'xlabel': self.horiz_label}
             if self.horiz_loc is 'top':
-                kwargs['labelpad'] = -70
+                if self.title is not None or extent_labels is not None:
+                    kwargs['labelpad'] = -70
+                else:
+                    kwargs['labelpad'] = -50
             self._ax_h.set_xlabel(**kwargs)
 
         self._ax_v.xaxis.set_major_locator(LinearLocator(numticks=2))
