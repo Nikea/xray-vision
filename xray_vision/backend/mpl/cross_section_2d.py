@@ -290,10 +290,9 @@ class CrossSection(object):
         label that describes the x axis of the vertical plot
     horiz_label : str, optional
         label that describes the x axis of the horizontal plot
-    extent_labels : list, optional
-        [x value initial, x value final, y value initial, y value final]
-        sets values for the axis labels on horizontal and
-        vertical plots
+    extent_labels : scalars, (left, right, bottom, top), optional
+        The location, in data-coordinates, of the ranges for the values
+        of the vertical and horizontal slices, scaling the image as needed
 
     Properties
     ----------
@@ -321,10 +320,14 @@ class CrossSection(object):
                                              int(self.extent_labels[1]), 5)
             self.y_tick_values = np.linspace(int(extent_labels[2]),
                                              int(extent_labels[3]), 5)
-        if vert_loc is None or vert_loc is not 'right':
+        if vert_loc is None:
             vert_loc = 'left'
-        if horiz_loc is None or horiz_loc is not 'bottom':
+        if vert_loc not in {'right', 'left'}:
+            raise ValueError(f"Error, {vert_loc} not 'left' or 'right'")
+        if horiz_loc is None:
             horiz_loc = 'top'
+        if horiz_loc not in {'top', 'bottom'}:
+            raise ValueError(f"Error, {horiz_loc} not 'top' or 'bottom'")
         self.horiz_loc = horiz_loc
         self.vert_loc = vert_loc
         if interpolation is None:
@@ -433,6 +436,8 @@ class CrossSection(object):
         self._ax_h.yaxis.set_major_locator(LinearLocator(numticks=2))
 
         self._ax_cb = divider.append_axes(
+            #used to place the colorbar based on the location of the vertical
+            #axis
             _swap_sides(self.vert_loc,enum_left_right), .2, pad=.5)
 
         if self.title is not None:
@@ -775,7 +780,8 @@ class CrossSection(object):
     def autoscale_vertical(self, enable):
         self._ax_v.autoscale(enable=False)
 
-
+#Method in which when two values are in enum, the value that is not the key
+#will be returned. Used for placing colorbar. 
 def _swap_sides(key, enum):
     assert len(enum) == 2, 'The enum dict should contain 2 key-value pairs'
     reverse_enum = {v: k for k, v in enum.items()}
