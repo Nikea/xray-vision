@@ -780,8 +780,20 @@ class CrossSection(object):
     def autoscale_vertical(self, enable):
         self._ax_v.autoscale(enable=False)
 
-#Method in which when two values are in enum, the value that is not the key
-#will be returned. Used for placing colorbar. 
+"""
+Easily swaps sides using the values in the enum and the key. Whatever the 
+value of the key is, the key in the enum that is not the given key will be 
+returned. If key is not in enum, the key assigned to 'True' is returned.
+
+Parameters
+----------
+
+key : string
+    value in enum that will not be returned 
+enum : dict 
+    dictionary holding two keys with values 'True' and 'False' 
+    
+"""
 def _swap_sides(key, enum):
     assert len(enum) == 2, 'The enum dict should contain 2 key-value pairs'
     reverse_enum = {v: k for k, v in enum.items()}
