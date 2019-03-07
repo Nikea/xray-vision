@@ -2,8 +2,8 @@ language: python
 sudo: false
 
 python:
-  - 2.7
-  - 3.4
+  - 3.6
+  - 3.7
 
 before_install:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi
@@ -18,8 +18,7 @@ install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
   - conda config --set always_yes true
   - conda update conda
-  - conda create -n testenv pip nose python=$TRAVIS_PYTHON_VERSION numpy scipy=0.15.1 scikit-image six coverage pandas
-  - conda install -n testenv -c scikit-xray lmfit
+  - conda create -n testenv pip nose python=$TRAVIS_PYTHON_VERSION numpy scipy scikit-image six coverage pandas lmfit matplotlib
   - source activate testenv
   - python setup.py install
   - pip install coveralls
