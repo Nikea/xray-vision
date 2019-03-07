@@ -75,7 +75,7 @@ def fullrange_limit_factory(limit_args=None):
            length 2 tuple to be passed to `im.clim(...)` to
            set the color limits of a ColorMappable object.
         """
-        return (np.min(im), np.max(im))
+        return (np.nanmin(im), np.nanmax(im))
 
     return _full_range
 
@@ -291,7 +291,8 @@ class CrossSection(object):
 
     """
     def __init__(self, fig, cmap=None, norm=None,
-                 limit_func=None, auto_redraw=True, interpolation=None):
+                 limit_func=None, auto_redraw=True, interpolation=None,
+                 aspect='equal'):
 
         self._cursor_position_cbs = []
         if interpolation is None:
@@ -343,13 +344,13 @@ class CrossSection(object):
 
         # make the main axes
         self._im_ax = fig.add_subplot(1, 1, 1)
-        self._im_ax.set_aspect('equal')
+        self._im_ax.set_aspect(aspect)
         self._im_ax.xaxis.set_major_locator(NullLocator())
         self._im_ax.yaxis.set_major_locator(NullLocator())
         self._imdata = None
         self._im = self._im_ax.imshow([[]], cmap=self._cmap, norm=self._norm,
                         interpolation=self._interpolation,
-                                      aspect='equal', vmin=0,
+                                      aspect=aspect, vmin=0,
                                       vmax=1)
 
         # make it dividable
