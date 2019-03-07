@@ -278,6 +278,8 @@ class CrossSection(object):
     interpolation : str, optional
         Interpolation method to use. List of valid options can be found in
         CrossSection2DView.interpolation
+    aspect : str, optional
+        Aspect passed into imshow, defaults to equal
 
     Properties
     ----------
