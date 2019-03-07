@@ -18,7 +18,7 @@ install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
   - conda config --set always_yes true
   - conda update conda
-  - conda create -n testenv pip nose python=$TRAVIS_PYTHON_VERSION numpy scipy scikit-image six coverage pandas lmfit matplotlib
+  - conda create -n testenv pip nose python=$TRAVIS_PYTHON_VERSION numpy scipy scikit-image six coverage pandas lmfit matplotlib -c conda-forge
   - source activate testenv
   - python setup.py install
   - pip install coveralls
