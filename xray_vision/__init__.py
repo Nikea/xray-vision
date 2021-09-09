@@ -34,18 +34,17 @@
 ########################################################################
 # imports to smooth over differences between PyQt4, PyQt5, PyQt4.1 and PySides
 
-import sip
+try:
+    import sip
+    sip.setapi('QString', 2)
+except ImportError:
+    pass
+
 import matplotlib
 import logging
 from logging import NullHandler
 from ._version import get_versions
-
-sip.setapi('QString', 2)
-
-
-
-from matplotlib.backends.qt_compat import QtCore, QtGui, QtWidgets
-
+from matplotlib.backends.qt_compat import (QtCore, QtGui, QtWidgets)  # noqa
 
 
 logger = logging.getLogger(__name__)

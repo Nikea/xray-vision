@@ -34,7 +34,7 @@
 ########################################################################
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from .. import QtCore, QtGui
+from .. import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar  # noqa
 from matplotlib.figure import Figure
@@ -105,15 +105,15 @@ class MPLDisplayWidget(AbstractDisplayWidget):
 
         canvas = FigureCanvas(self._fig)
         FigureCanvas.setSizePolicy(canvas,
-                                   QtGui.QSizePolicy.Expanding,
-                                   QtGui.QSizePolicy.Expanding)
+                                   QtWidgets.QSizePolicy.Expanding,
+                                   QtWidgets.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(canvas)
 
         # create the mpl toolbar
         self._mpl_toolbar = NavigationToolbar(canvas=self._fig.canvas,
                                               parent=self)
         # create a layout manager
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         # add the mpl toolbar to the layout
         layout.addWidget(self._mpl_toolbar)
         # add the mpl canvas to the layout

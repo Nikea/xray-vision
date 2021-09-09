@@ -82,7 +82,7 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
         self._ctrl_widget.sig_update_norm.connect(self.sl_update_norm)
 
         # standard mpl signal/slot pairs
-        self._ctrl_widget._cm_cb.editTextChanged[str].connect(
+        self._ctrl_widget._cm_cb.editTextChanged.connect(
             self.sl_update_cmap)
         self._ctrl_widget._cm_cb.setEditText(self._ctrl_widget.default_cmap)
 
@@ -94,7 +94,6 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
         self._ctrl_widget.sig_update_interpolation.connect(
             self._view.update_interpolation)
 
-    @QtCore.Slot(int)
     def sl_update_image(self, img_idx):
         """
         updates the image shown in the widget, assumed to be the same size
@@ -104,7 +103,6 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
         im = self._view._data_dict[self._view._key_list[img_idx]]
         self._ctrl_widget.set_im_lim(lo=np.min(im), hi=np.max(im))
 
-    @QtCore.Slot(np.ndarray)
     def sl_replace_image(self, img):
         """
         Replaces the image shown in the widget, rebulids everything
@@ -112,7 +110,6 @@ class CrossSection2DMessenger(AbstractMessenger2D, AbstractMPLMessenger):
         """
         raise NotImplementedError()
 
-    @QtCore.Slot(object)
     def sl_update_limit_func(self, limit_func):
         """
         Updates the type of limit computation function used
@@ -249,23 +246,23 @@ class CrossSection2DControlWidget(QtWidgets.QDockWidget):
         ctrl_layout.addStretch()
 
         # set this down here to make sure the function will run
-        self._cmbbox_intensity_behavior.currentIndexChanged[str].connect(
+        self._cmbbox_intensity_behavior.currentIndexChanged.connect(
             self.sl_set_image_intensity_behavior)
         # set to full range, do this last so all the call-back propagate
         self._cmbbox_intensity_behavior.setCurrentIndex(0)
         # force the issue about emitting
-        self._cmbbox_intensity_behavior.currentIndexChanged[str].emit(
+        self._cmbbox_intensity_behavior.currentIndexChanged.emit(
             intensity_behavior_types[0])
 
         # set this down here to make sure the function will run
-        self._cmbbox_norm.currentIndexChanged[str].connect(
+        self._cmbbox_norm.currentIndexChanged.connect(
             self.sl_set_normalization)
         # set to full range, do this last so all the call-back propagate
         self._cmbbox_norm.setCurrentIndex(0)
         # force the issue about emitting
-        self._cmbbox_norm.currentIndexChanged[str].emit(
+        self._cmbbox_norm.currentIndexChanged.emit(
             norm_names[0])
-        self._cmb_interp.currentIndexChanged[str].connect(
+        self._cmb_interp.currentIndexChanged.connect(
             self.sig_update_interpolation)
 
     def set_im_lim(self, lo, hi):
@@ -345,12 +342,10 @@ class CrossSection2DControlWidget(QtWidgets.QDockWidget):
         self._spin_img.setRange(self._slider_img.minimum(),
                                 self._slider_img.maximum())
 
-    @QtCore.Slot(str)
     def sl_set_normalization(self, norm_name):
         norm = self._norm_dict[str(norm_name)]
         self.sig_update_norm.emit(norm())
 
-    @QtCore.Slot(str)
     def sl_set_image_intensity_behavior(self, im_behavior):
 
         # get the limit factory to use
@@ -423,7 +418,6 @@ class CrossSection2DControlWidget(QtWidgets.QDockWidget):
             # un-wrap the signal blocking
             [sb.blockSignals(state) for sb, state in reset_state]
 
-    @QtCore.Slot(float)
     def sl_set_intensity_step(self, intensity_step):
         """
         Slot method for the intensity step spinbox valueChanged() method.
@@ -465,7 +459,6 @@ class CrossSection2DControlWidget(QtWidgets.QDockWidget):
         """
         self._spin_max.setValue(max_intensity)
 
-    @QtCore.Slot(float)
     def sl_set_min_intensity_limit(self, min_intensity):
         # grab the max value
         max_intensity = self._spin_max.value()
@@ -483,7 +476,6 @@ class CrossSection2DControlWidget(QtWidgets.QDockWidget):
             limit_func = self._limit_factory((min_intensity, max_intensity))
             self.sig_update_limit_function.emit(limit_func)
 
-    @QtCore.Slot(float)
     def sl_set_max_intensity_limit(self, max_intensity):
         # grab the max value
         min_intensity = self._spin_min.value()
@@ -519,7 +511,6 @@ class CrossSection2DControlWidget(QtWidgets.QDockWidget):
             self.stack = img_stack
             self._view.sl_update_image(0)
 
-    @QtCore.Slot(int)
     def update_frame(self, frame_idx):
         self.sig_update_image.emit(frame_idx)
 

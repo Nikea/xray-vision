@@ -37,7 +37,7 @@ from __future__ import (absolute_import, division, print_function,
 import six
 from collections import defaultdict
 from .util import mapping_mixin
-from .. import QtCore, QtWidgets
+from .. import QtCore, QtGui, QtWidgets
 
 import logging
 logger = logging.getLogger(__name__)

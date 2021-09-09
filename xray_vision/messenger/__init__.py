@@ -36,7 +36,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from .. import QtCore, QtGui, QtWidgets
+from .. import QtCore, QtWidgets, QtGui  # noqa
 
 # other relevant imports
 
@@ -179,7 +179,7 @@ class AbstractMessenger2D(AbstractMessenger):
                                axis_list=axis_list,
                                append_to_end_list=append_to_end_list)
         self.sl_update_plot()
-        
+
     @QtCore.Slot(list, list, list, list)
     def sl_add_datum(self, lbl_list, x_list, y_list, val_list):
         """
