@@ -309,9 +309,13 @@ class CrossSection(object):
             cmap = 'gray'
         # stash the color map
         self._cmap = cmap
-        # let norm pass through as None, mpl defaults to linear which is fine
+        # set the default norm if not passed
         if norm is None:
             norm = Normalize()
+        # always set the vmin/vmax as we can not auto-limit with an empty array
+        # below.  When we set the data we are going to fully rescale this
+        # anyway.
+        norm.vmin, norm.vmax = 0, 1
         self._norm = norm
         # save a copy of the limit function, we will need it later
         self._limit_func = limit_func
@@ -329,7 +333,7 @@ class CrossSection(object):
         # Configure the figure in our own image
         #
         #     	  +----------------------+
-        #	      |   H cross section    |
+        #         |   H cross section    |
         #     	  +----------------------+
         #   +---+ +----------------------+
         #   | V | |                      |
@@ -350,10 +354,13 @@ class CrossSection(object):
         self._im_ax.xaxis.set_major_locator(NullLocator())
         self._im_ax.yaxis.set_major_locator(NullLocator())
         self._imdata = None
-        self._im = self._im_ax.imshow([[]], cmap=self._cmap, norm=self._norm,
-                        interpolation=self._interpolation,
-                                      aspect=aspect, vmin=0,
-                                      vmax=1)
+        self._im = self._im_ax.imshow(
+            [[]],
+            cmap=self._cmap,
+            norm=self._norm,
+            interpolation=self._interpolation,
+            aspect=aspect,
+        )
 
         # make it dividable
         divider = make_axes_locatable(self._im_ax)
