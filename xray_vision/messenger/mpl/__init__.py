@@ -35,8 +35,8 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from .. import QtCore, QtGui, QtWidgets
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar  # noqa
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar  # noqa
 from matplotlib.figure import Figure
 from matplotlib import colors
 from ...backend.mpl import AbstractMPLDataView
